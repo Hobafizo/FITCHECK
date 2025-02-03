@@ -1,9 +1,15 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Image, StyleSheet, Platform, Button } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+
+async function handlePress(){
+  const response = await fetch('http://192.168.43.142:3000/testapi');
+  const json = await response.json();
+  console.log(json['KeyValue']);
+}
 
 export default function HomeScreen() {
   return (
@@ -50,6 +56,8 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
+
+      <Button title='Press Me' onPress={handlePress}/>
     </ParallaxScrollView>
   );
 }
