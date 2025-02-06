@@ -2,10 +2,10 @@ var sql = require('mssql/msnodesqlv8');
 
 var conObj =
 {
-    server: '.\\SQLSERVER',
-    database: 'FitCheck',
-    user: 'sa',
-    password: '696696',
+    server: process.env.SQL_SERVER,
+    database: process.env.SQL_DB,
+    user: process.env.SQL_USER,
+    password: process.env.SQL_PASS,
 };
 
 var sqlCon;
@@ -27,7 +27,8 @@ async function connect()
     }
     catch (error)
     {
-        console.log('Failed to connect to database: '.concat(error))
+        console.log('Failed to connect to database')
+        console.log(error)
     }
     return null
 }
@@ -40,7 +41,8 @@ async function disconnect()
     }
     catch (error)
     {
-        console.log('Failed to close database connection: '.concat(error))
+        console.log('Failed to close database connection')
+        console.log(error)
     }
 }
 
