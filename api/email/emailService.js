@@ -104,7 +104,9 @@ async function SendMailHtml(mailHTML, toEmail, toName, mailSubject, attaches)
 
 async function SendMailDoc(relPath, toEmail, toName, mailSubject, htmlReplacements, attaches)
 {
-  var mailHTML = await fs.readFileSync(path.join(__dirname.replace('api\\email', 'api\\') + '/docs/email/', relPath));
+  const appDir = path.dirname(require.main.filename).replace('api\\bin', 'api')
+
+  var mailHTML = await fs.readFileSync(appDir + '/docs/email/' + relPath);
   if (mailHTML == null)
     return
 
@@ -112,6 +114,14 @@ async function SendMailDoc(relPath, toEmail, toName, mailSubject, htmlReplacemen
   for (var i = 0; i < htmlReplacements.length; ++i)
   {
     mailHTML = mailHTML.replace(htmlReplacements[i].from, htmlReplacements[i].to);
+  }
+
+  if (attaches != null)
+  {
+    for (var i = 0; i < attaches.length; ++i)
+    {
+        attaches[i].path = appDir + '/' + attaches[i].path
+    }
   }
 
   // Create a SMTP transporter object
@@ -155,7 +165,7 @@ async function SendMailDoc(relPath, toEmail, toName, mailSubject, htmlReplacemen
           return process.exit(1);
       }
 
-      console.log('Email message sent successfully!');
+      console.log('Email message sent successfully');
 
       // only needed when using pooled connections
       transporter.close();

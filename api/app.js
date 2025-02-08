@@ -38,38 +38,38 @@ dbOp.connect()
 // Test email service
 /*const email = require('./email/emailservice')
 
-email.SendMailDoc('verify_mail.html', 'mohabfawzy1@gmail.com', 'Muhab Fawzy', 'Welcome to FitCheck - Registration Code',
+email.SendMailDoc('forget_pw.html', 'mohabfawzy1@gmail.com', 'Muhab Fawzy', 'Forget Password Code',
   [
     { from: '@VerifyCode', to: 'CAA-ATC-ABC' },
   ],
   [
     {
-      filename: 'img-01.png',
-      path: __dirname + '/public/images/email/img-01.png',
-      cid: 'img-01@fitcheck.com'
+      filename: 'img-02.png',
+      path: 'public/images/email/img-02.png',
+      cid: 'img-02@fitcheck.com'
     },
 
     {
       filename: 'facebook-logo-black.png',
-      path: __dirname + '/public/images/email/facebook-logo-black.png',
+      path: 'public/images/email/facebook-logo-black.png',
       cid: 'facebook-logo-black@fitcheck.com'
     },
 
     {
       filename: 'instagram-logo-black.png',
-      path: __dirname + '/public/images/email/instagram-logo-black.png',
+      path: 'public/images/email/instagram-logo-black.png',
       cid: 'instagram-logo-black@fitcheck.com'
     },
 
     {
       filename: 'x-logo-black.png',
-      path: __dirname + '/public/images/email/x-logo-black.png',
+      path: 'public/images/email/x-logo-black.png',
       cid: 'x-logo-black@fitcheck.com'
     },
 
     {
       filename: 'youtube-logo-black.png',
-      path: __dirname + '/public/images/email/youtube-logo-black.png',
+      path: 'public/images/email/youtube-logo-black.png',
       cid: 'youtube-logo-black@fitcheck.com'
     },
   ]
