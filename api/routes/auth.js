@@ -73,6 +73,12 @@ router.post('/login', LoginValidation, async function(req, res, next) {
         .input('Password', sql.VarChar(50), pw)
         .execute('[dbo].[OnUserLogin]', (err, result) =>
         {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
           if (result.returnValue == 1 || result.recordsets.length == 0 || result.recordset.length == 0)
             errors.push('Email or password is incorrect, please try again.')
 
@@ -125,6 +131,11 @@ async function SendUserVerifyCode(user, session)
       .input('UserID', sql.Int, user.UserID)
       .execute('[dbo].[GenerateUserVerifyCode]', (err, result) =>
       {
+        if (err != null)
+        {
+          console.log(err)
+        }
+
         if (result.returnValue != 0)
         {
           return
@@ -184,6 +195,12 @@ async function SendUserForgetCode(res, userEmail)
       .input('Email', sql.VarChar(50), userEmail)
       .execute('[dbo].[GenerateUserForgetCode]', (err, result) =>
       {
+        if (err != null)
+        {
+          errors.push('An error occurred while performing this action, report this to an admin.')
+          console.log(err)
+        }
+
         if (result.returnValue != 0)
         {
           errors.push('Could not find user with specified email.')
@@ -294,6 +311,7 @@ RegisterValidation = checkSchema(
 
     Gender:
     {
+      notEmpty: true,
       isIn: { options: ['M', 'F'] },
       errorMessage: 'Please enter a valid gender.',
     },
@@ -358,6 +376,12 @@ router.post('/register', RegisterValidation, async function(req, res, next) {
         .input('PhoneNum', sql.VarChar(14), phone)
         .execute('[dbo].[OnUserRegister]', (err, result) =>
         {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
           switch (result.returnValue)
           {
             case 1:
@@ -468,6 +492,12 @@ router.post('/verifyemail', VerifyEmailValidation, async function(req, res, next
         .input('Verified', sql.Bit, 1)
         .execute('[dbo].[SetUserVerifyStatus]', (err, result) =>
         {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
           if (result.returnValue != 0)
           {
             errors.push('An error occurred during email verification, try again later.')
@@ -618,6 +648,12 @@ router.post('/forgetpw', ForgetPasswordValidation, async function(req, res, next
         .input('ForgetCode', sql.VarChar(20), code)
         .execute('[dbo].[OnForgetPassword]', (err, result) =>
         {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
           switch (result.returnValue)
           {
             case 1:

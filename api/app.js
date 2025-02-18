@@ -37,6 +37,23 @@ app.use('/users', usersRouter);
 // Open database connection
 dbOp.connect()
 
+/*const { OpenWeatherAPI } = require("openweather-api-node")
+
+let weather = new OpenWeatherAPI({
+    key: "0c99d1e20ed6ccb964c9b6155b133411",
+    locationName: "Cairo",
+    units: "metric"
+})
+
+// you can use setters as well:
+// weather.setKey("put-key-here")
+// weather.setLocationByName("New York")
+// ...
+
+weather.getCurrent().then(data => {
+    console.log(`Current temperature in Cairo is: ${data.weather.temp.cur}\u00B0C`)
+})*/
+
 // Test email service
 /*const email = require('./email/emailservice')
 
