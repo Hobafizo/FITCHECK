@@ -38,10 +38,11 @@ app.use('/users', usersRouter);
 dbOp.connect()
 
 /*const { OpenWeatherAPI } = require("openweather-api-node")
+const location = "Cairo"
 
 let weather = new OpenWeatherAPI({
     key: "0c99d1e20ed6ccb964c9b6155b133411",
-    locationName: "Cairo",
+    locationName: location,
     units: "metric"
 })
 
@@ -51,7 +52,7 @@ let weather = new OpenWeatherAPI({
 // ...
 
 weather.getCurrent().then(data => {
-    console.log(`Current temperature in Cairo is: ${data.weather.temp.cur}\u00B0C`)
+    console.log(`Current temperature in ${location} is: ${data.weather.temp.cur}\u00B0C`)
 })*/
 
 // Test email service
