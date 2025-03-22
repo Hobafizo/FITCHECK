@@ -10,6 +10,7 @@ var dbOp = require('./sql/dbOperations');
 var indexRouter = require('./routes/index');
 var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
+var wardrobeRouter = require('./routes/wardrobe');
 
 var app = express();
 
@@ -33,6 +34,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
+app.use('/wardrobe', wardrobeRouter);
 
 // Open database connection
 dbOp.connect()

@@ -133,8 +133,6 @@ router.post('/updateprofile', ProfileUpdateValidation, async function(req, res, 
         .input('NewPassword', sql.VarChar(50), newpw)
         .execute('[dbo].[OnUserUpdate]', (err, result) =>
         {
-          console.log(result.returnValue)
-
           switch (result.returnValue)
           {
             case 2:
