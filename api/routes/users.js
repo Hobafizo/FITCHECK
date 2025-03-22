@@ -36,11 +36,12 @@ ProfileUpdateValidation = checkSchema(
         options: { max: 20 },
         errorMessage: 'Your last name must be below 20 chars.',
       },
-      errorMessage: 'Please enter a valid last namexz.',
+      errorMessage: 'Please enter a valid last name.',
     },
 
     Gender:
     {
+      notEmpty: true,
       isIn: { options: ['M', 'F'] },
       errorMessage: 'Please enter a valid gender.',
     },
@@ -133,6 +134,12 @@ router.post('/updateprofile', ProfileUpdateValidation, async function(req, res, 
         .input('NewPassword', sql.VarChar(50), newpw)
         .execute('[dbo].[OnUserUpdate]', (err, result) =>
         {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
           switch (result.returnValue)
           {
             case 2:
@@ -170,6 +177,103 @@ router.post('/updateprofile', ProfileUpdateValidation, async function(req, res, 
                   LastName: user.LastName,
                   Email: user.Email,
                   Verified: user.Verified,
+                })
+            }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+SavePreferencesValidation = checkSchema(
+  {
+    Preferences:
+    {
+      notEmpty: true,
+      isArray: true,
+      errorMessage: 'Please enter your favorite preferences.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/savepreferences', SavePreferencesValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const prefs = req.body.Preferences
+
+    const tvp = new sql.Table()
+    tvp.name = 'TagList'
+    tvp.columns.add('Tag', sql.VarChar(50))
+
+    for (var i = 0; i < prefs.length; ++i)
+    {
+      tvp.rows.add(prefs[i])
+    }
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('Preferences', sql.TVP, tvp)
+        .execute('[dbo].[OnUserPreferencesSave]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          switch (result.returnValue)
+          {
+            case 1:
+              errors.push('An error occurred while saving preferences, try again later.')
+              break
+          }
+
+          if (errors.length > 0)
+            {
+              res.send(
+                {
+                  Result: false,
+                  Errors: errors,
+                })
+            }
+    
+            else
+            {
+              res.send(
+                {
+                  Result: true,
                 })
             }
         })
