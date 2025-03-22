@@ -306,7 +306,7 @@ RegisterValidation = checkSchema(
         options: { max: 20 },
         errorMessage: 'Your last name must be below 20 chars.',
       },
-      errorMessage: 'Please enter a valid last namexz.',
+      errorMessage: 'Please enter a valid last name.',
     },
 
     Gender:
