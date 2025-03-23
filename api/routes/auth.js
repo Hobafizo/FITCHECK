@@ -98,6 +98,8 @@ router.post('/login', LoginValidation, async function(req, res, next) {
               req.session.user = user
               req.session.save()
 
+              SendUserVerifyCode(user, req.session.user)
+
               res.send(
                 {
                   Result: true,
