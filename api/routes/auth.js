@@ -282,7 +282,7 @@ CheckEmailValidation = checkSchema(
 )
 
 
-router.post('/checkemail', RegisterValidation, async function(req, res, next) {
+router.post('/checkemail', CheckEmailValidation, async function(req, res, next) {
   var errors = [];
 
   if (req.session.user != null)
