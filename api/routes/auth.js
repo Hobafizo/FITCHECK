@@ -98,6 +98,8 @@ router.post('/login', LoginValidation, async function(req, res, next) {
               req.session.user = user
               req.session.save()
 
+              SendUserVerifyCode(user, req.session.user)
+
               res.send(
                 {
                   Result: true,
@@ -263,6 +265,94 @@ async function SendUserForgetCode(res, userEmail)
 }
 
 
+CheckEmailValidation = checkSchema(
+  {
+    Email:
+    {
+      isEmail: true,
+      isLength:
+      {
+        options: { min: 6, max: 24 },
+        errorMessage: 'Your email must be between 6 ~ 24 chars.',
+      },
+      errorMessage: 'Please enter a valid email.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/checkemail', RegisterValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user != null)
+    errors.push('You are already logged in!')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const email = req.body.Email
+
+    var query = await dbOp.request()
+
+    await query
+        .input('Email', sql.VarChar(50), email)
+        .execute('[dbo].[CheckValidEmail]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          switch (result.returnValue)
+          {
+            case 1:
+              errors.push('An existing account already uses this email.')
+              break
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+              res.send(
+              {
+                Result: true,
+              })
+            }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
 RegisterValidation = checkSchema(
   {
     Email:
@@ -306,7 +396,7 @@ RegisterValidation = checkSchema(
         options: { max: 20 },
         errorMessage: 'Your last name must be below 20 chars.',
       },
-      errorMessage: 'Please enter a valid last namexz.',
+      errorMessage: 'Please enter a valid last name.',
     },
 
     Gender:
