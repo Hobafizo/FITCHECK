@@ -51,8 +51,8 @@ router.post('/add', AddWardrobeValidation, async function(req, res, next) {
         errors.push(result.array()[i].msg)
     }
 
-    /*if (!isBase64(req.body.ItemImage, { mimeRequired: true }))
-        errors.push('Please send wardrobe item picture.')*/
+    if (!isBase64(req.body.ItemImage, { mimeRequired: true }))
+        errors.push('Please send wardrobe item picture.')
   }
 
   var img = null
