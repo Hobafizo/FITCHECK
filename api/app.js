@@ -12,25 +12,6 @@ var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var wardrobeRouter = require('./routes/wardrobe');
 
-const spawn = require("child_process").spawn;
-const pythonProcess = spawn('python',["C:/Users/Muhab/source/repos/Hobafizo/FITCHECK/api/Test.py"]);
-
-pythonProcess.stdout.on('data', (data) => {
-  console.log('received data [' + data + ']')
- });
-
- setTimeout(() => {
-  pythonProcess.stdin.write('Second input\n');
-}, 1000);
-
-setTimeout(() => {
-  pythonProcess.stdin.write('Second input\n');
-}, 4000);
-
-pythonProcess.on('close', (code) => {
-  console.log(`Child process exited with code ${code}.`);
-});
-
 var app = express();
 
 app.use(session({
