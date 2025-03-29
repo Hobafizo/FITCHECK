@@ -56,7 +56,7 @@ router.post('/add', upload.single('ItemImage'), AddWardrobeValidation, async fun
     console.log(req.file)
 
     if (req.file == null)
-      errors.push('Please send wardrobe item picture.')*/
+      errors.push('Please send wardrobe item picture.')
 
     /*if (!isBase64(req.file, { mimeRequired: true }))
       errors.push('Please send wardrobe item picture.')*/
