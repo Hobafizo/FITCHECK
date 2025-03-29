@@ -29,8 +29,8 @@ AddWardrobeValidation = checkSchema(
   ["body"]
 )
 
-const multer  = require('multer')
-const upload = multer({ dest: 'uploads/' })
+const storage = multer.memoryStorage()
+const upload = multer({ dest: 'uploads/', storage: storage, limits: { fileSize: 1000 * 1 * 10000 } })
 
 
 router.post('/add', upload.single('ItemImage'), AddWardrobeValidation, async function(req, res, next) {
