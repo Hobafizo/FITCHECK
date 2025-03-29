@@ -66,6 +66,7 @@ router.post('/add', upload.single('ItemImage'), AddWardrobeValidation, async fun
 
   if (errors.length == 0)
   {
+    console.log(req.file.buffer)
     img = await Jimp.read(req.file.buffer)
   
     if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
