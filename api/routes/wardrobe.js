@@ -55,15 +55,18 @@ router.post('/add', upload.single('ItemImage'), AddWardrobeValidation, async fun
 
     console.log(req.file)
 
+    if (req.file == null)
+      errors.push('Please send wardrobe item picture.')*/
+
     /*if (!isBase64(req.file, { mimeRequired: true }))
-        errors.push('Please send wardrobe item picture.')*/
+      errors.push('Please send wardrobe item picture.')*/
   }
 
   var img = null
 
   if (errors.length == 0)
   {
-    img = await Jimp.read(req.file)
+    img = await Jimp.read(req.file.buffer)
   
     if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
         errors.push('Please send a valid wardrobe item picture.')
