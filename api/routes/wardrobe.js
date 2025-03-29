@@ -78,6 +78,8 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
       console.log('Image is valid with size: ' + img.width + 'x' + img.height)
 
       await img.write('data/wardrobe/file.png')
+
+      processed_imgs++
     }
 
     res.send(
