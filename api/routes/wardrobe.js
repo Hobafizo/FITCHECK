@@ -2,6 +2,7 @@ var express = require('express')
 var router = express.Router()
 var hashMD5 = require('../hash/md5')
 const isBase64 = require('is-base64')
+const multer = require('multer')
 const { Jimp } = require("jimp");
 const fs = require('fs');
 
