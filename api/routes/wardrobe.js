@@ -20,18 +20,20 @@ const {
 
 AddWardrobeValidation = checkSchema(
   {
-    ItemImage:
+    /*ItemImage:
     {
-      //notEmpty: true,
-      optional: true,
+      notEmpty: true,
       errorMessage: 'Please send wardrobe item picture.',
-    },
+    },*/
   },
   ["body"]
 )
 
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
 
-router.post('/add', AddWardrobeValidation, async function(req, res, next) {
+
+router.post('/add', upload.single('ItemImage'), AddWardrobeValidation, async function(req, res, next) {
   var errors = [];
 
   if (req.session.user == null)
@@ -51,9 +53,9 @@ router.post('/add', AddWardrobeValidation, async function(req, res, next) {
         errors.push(result.array()[i].msg)
     }
 
-    console.log(req.body)
+    console.log(req.file)
 
-    if (!isBase64(req.body.ItemImage, { mimeRequired: true }))
+    if (!isBase64(req.file, { mimeRequired: true }))
         errors.push('Please send wardrobe item picture.')
   }
 
@@ -61,7 +63,7 @@ router.post('/add', AddWardrobeValidation, async function(req, res, next) {
 
   if (errors.length == 0)
   {
-    img = await Jimp.read(req.body.ItemImage)
+    img = await Jimp.read(req.file)
   
     if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
         errors.push('Please send a valid wardrobe item picture.')
