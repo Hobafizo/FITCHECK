@@ -22,7 +22,8 @@ AddWardrobeValidation = checkSchema(
   {
     ItemImage:
     {
-      notEmpty: true,
+      //notEmpty: true,
+      optional: true,
       errorMessage: 'Please send wardrobe item picture.',
     },
   },
