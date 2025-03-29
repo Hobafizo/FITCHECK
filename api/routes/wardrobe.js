@@ -34,7 +34,7 @@ const storage = multer.memoryStorage()
 const upload = multer({ dest: 'uploads/', storage: storage, limits: { fileSize: 1000 * 1 * 10000 } })
 
 
-router.post('/add', upload.single('ItemImage'), AddWardrobeValidation, async function(req, res, next) {
+router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async function(req, res, next) {
   var errors = [];
 
   if (req.session.user == null)
@@ -54,36 +54,37 @@ router.post('/add', upload.single('ItemImage'), AddWardrobeValidation, async fun
         errors.push(result.array()[i].msg)
     }
 
-    console.log(req.file)
-
-    if (req.file == null)
+    if (req.files == null || req.files.length == 0)
       errors.push('Please send wardrobe item picture.')
 
     /*if (!isBase64(req.file, { mimeRequired: true }))
       errors.push('Please send wardrobe item picture.')*/
   }
 
-  var img = null
-
   if (errors.length == 0)
   {
-    console.log(req.file.buffer)
-    img = await Jimp.read(req.file.buffer)
-  
-    if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
-        errors.push('Please send a valid wardrobe item picture.')
-  }
+    var processed_imgs = 0
+    var img = null
 
-  if (errors.length == 0)
-  {
-    console.log('Image is valid with size: ' + img.width + 'x' + img.height)
+    for (var i = 0; i < req.files.length; ++i)
+    {
+      if (req.files[i].buffer == null)
+        continue
 
-    await img.write('data/wardrobe/file.png')
+      img = await Jimp.read(req.files[i].buffer)
+      if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
+        continue
+
+      console.log('Image is valid with size: ' + img.width + 'x' + img.height)
+
+      await img.write('data/wardrobe/file.png')
+    }
 
     res.send(
-        {
-          Result: true,
-        })
+    {
+      Result: true,
+      AddedItems: processed_imgs
+    })
   }
 
   else
