@@ -59,7 +59,7 @@ router.post('/add', AddWardrobeValidation, async function(req, res, next) {
 
   if (errors.length == 0)
   {
-    console.log(req.body.ItemImage)
+    console.log(req.body)
     img = await Jimp.read(req.body.ItemImage)
   
     if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
