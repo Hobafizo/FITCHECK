@@ -54,6 +54,8 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
         errors.push(result.array()[i].msg)
     }
 
+    console.log(req.files)
+
     if (req.files == null || req.files.length == 0)
       errors.push('Please send wardrobe item picture.')
 
