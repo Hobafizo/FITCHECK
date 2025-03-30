@@ -37,11 +37,12 @@ const upload = multer({ dest: 'uploads/', storage: storage, limits: { fileSize: 
 router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async function(req, res, next) {
   var errors = [];
 
-  if (req.session.user == null)
+  if (true == false)
+  //if (req.session.user == null)
     errors.push('You are not logged in!')
 
-  else if (!req.session.user.Verified)
-    errors.push('Your account must be verified to perform this action.')
+  /*else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')*/
 
   else
   {
