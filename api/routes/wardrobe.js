@@ -34,7 +34,7 @@ const storage = multer.memoryStorage()
 const upload = multer({ dest: 'uploads/', storage: storage, limits: { fileSize: 1000 * 1 * 10000 } })
 
 
-router.post('/add', AddWardrobeValidation, upload.array('ItemImages[]'), async function(req, res, next) {
+router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async function(req, res, next) {
   var errors = [];
 
   if (true == false)
