@@ -163,7 +163,6 @@ async function SegmentImages(session, sessionID, sessionStore, images)
               }
   
               sessionStore.set(sessionID, session)
-              console.log(session.wardrobe)
             });
           }
         })
@@ -313,7 +312,6 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
     }
 
     req.session.save()
-    console.log(req.session.wardrobe)
 
     res.send(
     {
