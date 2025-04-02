@@ -140,45 +140,47 @@ router.post('/updateprofile', ProfileUpdateValidation, async function(req, res, 
             console.log(err)
           }
 
-          switch (result.returnValue)
+          if (result != null)
           {
-            case 2:
-              errors.push('Current password is incorrect, please try again.')
-              break
+            switch (result.returnValue)
+            {
+              case 2:
+                errors.push('Current password is incorrect, please try again.')
+                break
 
-            case 1:
-            case 3:
-              errors.push('An error occurred during registration, try again later.')
-              break
+              case 1:
+              case 3:
+                errors.push('An error occurred during registration, try again later.')
+                break
+            }
           }
 
           if (errors.length > 0)
-            {
-              res.send(
-                {
-                  Result: false,
-                  Errors: errors,
-                })
-            }
-    
-            else
-            {
-              var user = result.recordset[0]
+          {
+            res.send(
+              {
+                Result: false,
+                Errors: errors,
+              })
+          }
+  
+          else
+          {
+            var user = result.recordset[0]
 
-              req.session.user = user
-              req.session.save()
-
-              res.send(
-                {
-                  Result: true,
-
-                  UserID: user.UserID,
-                  FirstName: user.FirstName,
-                  LastName: user.LastName,
-                  Email: user.Email,
-                  Verified: user.Verified,
-                })
-            }
+            req.session.user = user
+            req.session.save()
+            
+            res.send(
+              {
+                Result: true,
+                UserID: user.UserID,
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                Email: user.Email,
+                Verified: user.Verified,
+              })
+          }
         })
   }
 
@@ -253,11 +255,14 @@ router.post('/savepreferences', SavePreferencesValidation, async function(req, r
             console.log(err)
           }
 
-          switch (result.returnValue)
+          if (result != null)
           {
-            case 1:
-              errors.push('An error occurred while saving preferences, try again later.')
-              break
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('An error occurred while saving preferences, try again later.')
+                break
+            }
           }
 
           if (errors.length > 0)

@@ -79,8 +79,11 @@ router.post('/login', LoginValidation, async function(req, res, next) {
             console.log(err)
           }
 
-          if (result.returnValue == 1 || result.recordsets.length == 0 || result.recordset.length == 0)
-            errors.push('Email or password is incorrect, please try again.')
+          if (result != null)
+          {
+            if (result.returnValue == 1 || result.recordsets.length == 0 || result.recordset.length == 0)
+              errors.push('Email or password is incorrect, please try again.')
+          }
 
           if (errors.length > 0)
             {
@@ -97,6 +100,8 @@ router.post('/login', LoginValidation, async function(req, res, next) {
 
               req.session.user = user
               req.session.save()
+
+              GetUserWardrobe(user, req.session)
 
               res.send(
                 {
@@ -136,7 +141,7 @@ async function SendUserVerifyCode(user, session)
           console.log(err)
         }
 
-        if (result.returnValue != 0)
+        if (result == null || result.returnValue != 0)
         {
           return
         }
@@ -186,6 +191,31 @@ async function SendUserVerifyCode(user, session)
 }
 
 
+async function GetUserWardrobe(user, session)
+{
+  var query = await dbOp.request()
+
+  await query
+      .input('UserID', sql.Int, user.UserID)
+      .execute('[dbo].[GetWardrobeItems]', (err, result) =>
+      {
+        if (err != null)
+        {
+          console.log(err)
+        }
+
+        if (result == null || result.returnValue != 0 || result.recordset == null || result.recordset.length == 0)
+        {
+          return
+        }
+
+        var wardrobe = result.recordset
+        session.wardrobe = wardrobe
+        session.save()
+      })
+}
+
+
 async function SendUserForgetCode(res, userEmail)
 {
   var errors = [];
@@ -201,10 +231,13 @@ async function SendUserForgetCode(res, userEmail)
           console.log(err)
         }
 
-        if (result.returnValue != 0)
+        if (result != null)
         {
-          errors.push('Could not find user with specified email.')
-        }        
+          if (result.returnValue != 0)
+          {
+            errors.push('Could not find user with specified email.')
+          }
+        }
 
         if (errors.length > 0)
         {
@@ -314,11 +347,14 @@ router.post('/checkemail', CheckEmailValidation, async function(req, res, next) 
             console.log(err)
           }
 
-          switch (result.returnValue)
+          if (result != null)
           {
-            case 1:
-              errors.push('An existing account already uses this email.')
-              break
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('An existing account already uses this email.')
+                break
+            }
           }
 
           if (errors.length > 0)
@@ -470,20 +506,23 @@ router.post('/register', RegisterValidation, async function(req, res, next) {
             console.log(err)
           }
 
-          switch (result.returnValue)
+          if (result != null)
           {
-            case 1:
-              errors.push('Birth date value is invalid.')
-              break
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('Birth date value is invalid.')
+                break
 
-            case 2:
-              errors.push('An existing account already uses this email.')
-              break
+              case 2:
+                errors.push('An existing account already uses this email.')
+                break
 
-            case 3:
-            case 4:
-              errors.push('An error occurred during registration, try again later.')
-              break
+              case 3:
+              case 4:
+                errors.push('An error occurred during registration, try again later.')
+                break
+            }
           }
 
           if (errors.length > 0)
@@ -502,6 +541,7 @@ router.post('/register', RegisterValidation, async function(req, res, next) {
               req.session.user = user
               req.session.save()
 
+              GetUserWardrobe(user, req.session)
               SendUserVerifyCode(user, req.session)
 
               res.send(
@@ -586,9 +626,12 @@ router.post('/verifyemail', VerifyEmailValidation, async function(req, res, next
             console.log(err)
           }
 
-          if (result.returnValue != 0)
+          if (result != null)
           {
-            errors.push('An error occurred during email verification, try again later.')
+            if (result.returnValue != 0)
+            {
+              errors.push('An error occurred during email verification, try again later.')
+            }
           }
 
           if (errors.length == 0)
@@ -742,21 +785,23 @@ router.post('/forgetpw', ForgetPasswordValidation, async function(req, res, next
             console.log(err)
           }
 
-          switch (result.returnValue)
+          if (result != null)
           {
-            case 1:
-              errors.push('Could not find user with specified email, try again later.')
-              break
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('Could not find user with specified email, try again later.')
+                break
 
-            case 2:
-              errors.push('Forget password code is incorrect, please check your email and try again.')
-              break
+              case 2:
+                errors.push('Forget password code is incorrect, please check your email and try again.')
+                break
 
-            case 3:
-              errors.push('An error occurred while processing forget password request, try again later.')
-              break
+              case 3:
+                errors.push('An error occurred while processing forget password request, try again later.')
+                break
+            }
           }
-
 
           if (errors.length > 0)
           {

@@ -57,46 +57,6 @@ weather.getCurrent().then(data => {
     console.log(`Current temperature in ${location} is: ${data.weather.temp.cur}\u00B0C`)
 })*/
 
-// Test email service
-/*const email = require('./email/emailservice')
-
-email.SendMailDoc('forget_pw.html', 'mohabfawzy1@gmail.com', 'Muhab Fawzy', 'Forget Password Code',
-  [
-    { from: '@VerifyCode', to: 'CAA-ATC-ABC' },
-  ],
-  [
-    {
-      filename: 'img-02.png',
-      path: 'public/images/email/img-02.png',
-      cid: 'img-02@fitcheck.com'
-    },
-
-    {
-      filename: 'facebook-logo-black.png',
-      path: 'public/images/email/facebook-logo-black.png',
-      cid: 'facebook-logo-black@fitcheck.com'
-    },
-
-    {
-      filename: 'instagram-logo-black.png',
-      path: 'public/images/email/instagram-logo-black.png',
-      cid: 'instagram-logo-black@fitcheck.com'
-    },
-
-    {
-      filename: 'x-logo-black.png',
-      path: 'public/images/email/x-logo-black.png',
-      cid: 'x-logo-black@fitcheck.com'
-    },
-
-    {
-      filename: 'youtube-logo-black.png',
-      path: 'public/images/email/youtube-logo-black.png',
-      cid: 'youtube-logo-black@fitcheck.com'
-    },
-  ]
-)*/
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
