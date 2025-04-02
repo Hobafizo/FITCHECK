@@ -1,5 +1,7 @@
 var express = require('express');
 var router = express.Router();
+const fs = require('fs');
+var path = require('path');
 
 const {
   check,
@@ -17,7 +19,16 @@ router.get('/', function(req, res, next) {
 
 
 router.get('/asset', function(req, res, next) {
-  res.download(req.query.file)
+  const appDir = path.dirname(require.main.filename).replace('api\\bin', 'api')
+  const filePath = appDir + '\\' + req.query.file
+
+  fs.stat(filePath, function(err, stat)
+  {
+    if (err == null)
+      res.sendFile(filePath)
+    else
+      res.send('asset not found');
+  });
 });
 
 module.exports = router;

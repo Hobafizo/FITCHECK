@@ -61,7 +61,8 @@ router.get('/', async function(req, res, next) {
       items.push(
       {
         ItemID: req.session.wardrobe[i].ItemID,
-        ItemName: req.session.wardrobe[i].Name,
+        ItemName: req.session.wardrobe[i].ItemName,
+        BrandName: req.session.wardrobe[i].BrandName,
         ImagePath: req.session.wardrobe[i].ImagePath,
         Status: req.session.wardrobe[i].Status,
       })
@@ -243,6 +244,7 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
     processed_imgs.push(
     {
       ItemName: '',
+      BrandName: '',
       RelativePath: relativePath,
       FullPath: fullPath,
       Status: 2
@@ -252,12 +254,13 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
   const tvp = new sql.Table()
   tvp.name = 'WardrobeItemList'
   tvp.columns.add('ItemName', sql.VarChar(50), {nullable: true})
+  tvp.columns.add('BrandName', sql.VarChar(50), {nullable: true})
   tvp.columns.add('ImagePath', sql.VarChar(200))
   tvp.columns.add('Status', sql.TinyInt)
 
   for (var i = 0; i < processed_imgs.length; ++i)
   {
-    tvp.rows.add(processed_imgs[i].ItemName, processed_imgs[i].RelativePath, processed_imgs[i].Status)
+    tvp.rows.add(processed_imgs[i].ItemName, processed_imgs[i].BrandName, processed_imgs[i].RelativePath, processed_imgs[i].Status)
   }
 
   const query = (await dbOp.request())
