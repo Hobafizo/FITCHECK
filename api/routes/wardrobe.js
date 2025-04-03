@@ -19,6 +19,7 @@ const {
   validationResult,
   checkSchema,
 } = require("express-validator");
+const { error } = require('console')
 
 
 router.get('/', async function(req, res, next) {
@@ -320,6 +321,158 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
     })
 
     SegmentImages(req.session, req.sessionID, req.sessionStore, processed_imgs)
+  }
+});
+
+
+ModifyWardrobeValidation = checkSchema(
+  {
+    ItemID:
+    {
+      notEmpty: true,
+      isInt: true,
+      errorMessage: 'Please send wardrobe item picture.',
+    },
+    ItemName:
+    {
+      optional: true,
+      isLength:
+      {
+        options: { max: 50 },
+        errorMessage: 'Item name must be below 50 chars.',
+      },
+      errorMessage: 'Please send wardrobe item picture.',
+    },
+    BrandName:
+    {
+      optional: true,
+      isLength:
+      {
+        options: { max: 50 },
+        errorMessage: 'Brand name must be below 50 chars.',
+      },
+      errorMessage: 'Please send wardrobe item picture.',
+    },
+    Tags:
+    {
+      optional: true,
+      isArray: true,
+      errorMessage: 'Please enter your favorite preferences.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/modify', ModifyWardrobeValidation, upload.array('ItemImages'), async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+
+    if (
+      req.body.ItemName == null
+      && req.body.BrandName == null
+      && req.body.Tags == null
+    )
+    errors.push('You must at least modify one input.')
+  }
+
+  if (errors.length == 0)
+  {
+    const itemid = req.body.ItemID
+    const itemname = req.body.ItemName
+    const brandname = req.body.BrandName
+    const tags = req.body.Tags
+
+    const tvp = new sql.Table()
+    tvp.name = 'TagList'
+    tvp.columns.add('Class', sql.VarChar(50))
+    tvp.columns.add('Tag', sql.VarChar(50))
+  
+    console.log(req.body)
+    if (tags != null)
+    {
+      for (var i = 0; i < tags.length; ++i)
+      {
+        if (tags[i].Class != null && tags[i].Tag != null)
+        {
+          tvp.rows.add(tags[i].Class, tags[i].Tag)
+        }
+      }
+    }
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('ItemID', sql.Int, itemid)
+        .input('ItemName', sql.VarChar(50), itemname)
+        .input('BrandName', sql.VarChar(50), brandname)
+        .input('Tags', sql.TVP, tvp)
+        .execute('[dbo].[OnWardrobeItemModify]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('An error occurred while saving preferences, try again later.')
+                break
+
+              case 2:
+              case 3:
+                errors.push('Could not find this item, please reload and try again.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            res.send(
+            {
+              Result: true,
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
   }
 });
 

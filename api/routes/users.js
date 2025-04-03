@@ -235,11 +235,12 @@ router.post('/savepreferences', SavePreferencesValidation, async function(req, r
 
     const tvp = new sql.Table()
     tvp.name = 'TagList'
+    tvp.columns.add('Class', sql.VarChar(50))
     tvp.columns.add('Tag', sql.VarChar(50))
 
     for (var i = 0; i < prefs.length; ++i)
     {
-      tvp.rows.add(prefs[i])
+      tvp.rows.add(prefs[i].Class, prefs[i].Tag)
     }
 
     var query = await dbOp.request()
