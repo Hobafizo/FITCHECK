@@ -331,7 +331,7 @@ ModifyWardrobeValidation = checkSchema(
     {
       notEmpty: true,
       isInt: true,
-      errorMessage: 'Please send wardrobe item picture.',
+      errorMessage: 'Please specify which wardrobe item you would like to modify.',
     },
     ItemName:
     {
@@ -341,7 +341,7 @@ ModifyWardrobeValidation = checkSchema(
         options: { max: 50 },
         errorMessage: 'Item name must be below 50 chars.',
       },
-      errorMessage: 'Please send wardrobe item picture.',
+      errorMessage: 'Please send item name.',
     },
     BrandName:
     {
@@ -351,20 +351,20 @@ ModifyWardrobeValidation = checkSchema(
         options: { max: 50 },
         errorMessage: 'Brand name must be below 50 chars.',
       },
-      errorMessage: 'Please send wardrobe item picture.',
+      errorMessage: 'Please send item brand name.',
     },
     Tags:
     {
       optional: true,
       isArray: true,
-      errorMessage: 'Please enter your favorite preferences.',
+      errorMessage: 'Please send item tags properly.',
     },
   },
   ["body"]
 )
 
 
-router.post('/modify', ModifyWardrobeValidation, upload.array('ItemImages'), async function(req, res, next) {
+router.post('/modify', ModifyWardrobeValidation, async function(req, res, next) {
   var errors = [];
 
   if (req.session.user == null)
@@ -404,7 +404,6 @@ router.post('/modify', ModifyWardrobeValidation, upload.array('ItemImages'), asy
     tvp.columns.add('Class', sql.VarChar(50))
     tvp.columns.add('Tag', sql.VarChar(50))
   
-    console.log(req.body)
     if (tags != null)
     {
       for (var i = 0; i < tags.length; ++i)
@@ -437,11 +436,106 @@ router.post('/modify', ModifyWardrobeValidation, upload.array('ItemImages'), asy
             switch (result.returnValue)
             {
               case 1:
-                errors.push('An error occurred while saving preferences, try again later.')
+                errors.push('An error occurred while modfiying wardrobe item, try again later.')
                 break
 
               case 2:
               case 3:
+                errors.push('Could not find this item, please reload and try again.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            res.send(
+            {
+              Result: true,
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+DeleteWardrobeValidation = checkSchema(
+  {
+    ItemID:
+    {
+      notEmpty: true,
+      isInt: true,
+      errorMessage: 'Please specify which wardrobe item you would like to delete.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/delete', DeleteWardrobeValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const itemid = req.body.ItemID
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('ItemID', sql.Int, itemid)
+        .execute('[dbo].[OnWardrobeItemDelete]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('An error occurred while deleting wardrobe item, try again later.')
+                break
+
+              case 2:
                 errors.push('Could not find this item, please reload and try again.')
                 break
             }
