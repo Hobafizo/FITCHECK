@@ -140,14 +140,19 @@ async function SegmentImages(session, sessionID, sessionStore, images)
       {
         if (data[i].Result == true)
         {
-          fs.stat(data[i].ImagePath, function(err, stat)
+          try
           {
-            if (err == null)
+            const file = await fs.stat(data[i].ImagePath);
+            if (file == null)
             {
               console.log("Removing: " + data[i].ImagePath)
               fs.unlink(data[i].ImagePath)
             }
-          });
+          }
+          catch (err)
+          {
+            console.log(err)
+          }        
         }
       }
 
