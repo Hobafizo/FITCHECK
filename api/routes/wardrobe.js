@@ -142,6 +142,8 @@ async function SegmentImages(session, sessionID, sessionStore, images)
         {
           try
           {
+            if (i == 1)
+              data[i].ImagePath += 'pp'
             const file = fs.statSync(data[i].ImagePath);
             if (file == null)
             {
