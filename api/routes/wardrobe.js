@@ -247,11 +247,10 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
     if (req.files[i].buffer == null)
       continue
 
-    console.log(req.files[i])
     if (
-      req.files[i].mimeType != 'image/png'
-      && req.files[i].mimeType != 'image/jpg'
-      && req.files[i].mimeType != 'image/jpeg'
+      req.files[i].mimetype != 'image/png'
+      && req.files[i].mimetype != 'image/jpg'
+      && req.files[i].mimetype != 'image/jpeg'
     )
       continue
 
