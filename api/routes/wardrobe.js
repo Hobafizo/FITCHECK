@@ -588,6 +588,12 @@ router.post('/delete', DeleteWardrobeValidation, async function(req, res, next) 
     
           else
           {
+            const index = session.wardrobe.findIndex(item => item.ItemID === itemid);
+            if (index !== -1)
+            {
+              session.wardrobe.splice(index, 1)
+            }
+
             res.send(
             {
               Result: true,
