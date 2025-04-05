@@ -82,6 +82,25 @@ const storage = multer.memoryStorage()
 const upload = multer({ dest: 'uploads/', storage: storage, limits: { fileSize: 1000 * 1 * 10000 } })
 
 
+function ClearOldImages(images)
+{
+  for (var i = 0; i < images.length; ++i)
+    {
+      if (images[i].Result == true)
+      {
+        try
+        {
+          const file = fs.statSync(images[i].ImagePath);
+          if (file != null)
+            fs.unlinkSync(images[i].ImagePath)
+        }
+        catch (err)
+        {
+        }        
+      }
+    }
+}
+
 async function SegmentImages(session, sessionID, sessionStore, images)
 {
   try
@@ -136,21 +155,7 @@ async function SegmentImages(session, sessionID, sessionStore, images)
 
     if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
     {
-      for (var i = 0; i < data.length; ++i)
-      {
-        if (data[i].Result == true)
-        {
-          try
-          {
-            const file = fs.statSync(data[i].ImagePath);
-            if (file != null)
-              fs.unlinkSync(data[i].ImagePath)
-          }
-          catch (err)
-          {
-          }        
-        }
-      }
+      ClearOldImages(data)
 
       var wardrobe = result.recordset
       
