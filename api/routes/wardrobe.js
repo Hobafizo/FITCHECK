@@ -283,6 +283,7 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
       Result: false,
       Errors: errors,
     })
+    return
   }
 
   const tvp = new sql.Table()
