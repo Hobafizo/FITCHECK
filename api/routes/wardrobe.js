@@ -147,8 +147,8 @@ async function SegmentImages(session, sessionID, sessionStore, images)
             if (file != null)
             {
               console.log("Removing: " + data[i].ImagePath)
-              const rm = await fs.unlink(data[i].ImagePath)
-              console.log("Result: " + rm)
+              await fs.unlinkSync(data[i].ImagePath)
+              console.log("Removed")
             }
           }
           catch (err)
