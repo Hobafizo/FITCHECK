@@ -142,23 +142,17 @@ async function SegmentImages(session, sessionID, sessionStore, images)
         {
           try
           {
-            if (i == 1)
-              data[i].ImagePath += 'pp'
             const file = fs.statSync(data[i].ImagePath);
-            if (file == null)
+            if (file != null)
             {
-              console.log("Removing: " + data[i].ImagePath)
               fs.unlink(data[i].ImagePath)
             }
           }
           catch (err)
           {
-            console.log(err)
           }        
         }
       }
-
-      console.log('finished removing items')
 
       var wardrobe = result.recordset
       
