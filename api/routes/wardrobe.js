@@ -131,9 +131,10 @@ async function SegmentImages(session, sessionID, sessionStore, images)
                     .input('Items', sql.TVP, tvp)
     
     const result = await query.execute('[dbo].[OnWardrobePostSegmentation]')
-    if (result != null)
+    if (result == null)
       return
 
+    console.log(result.recordset)
     if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
     {
       for (var i = 0; i < data.length; ++i)
