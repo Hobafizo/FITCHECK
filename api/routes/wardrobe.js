@@ -131,7 +131,7 @@ async function SegmentImages(session, sessionID, sessionStore, images)
     await query
         .input('UserID', sql.Int, session.user.UserID)
         .input('Items', sql.TVP, tvp)
-        .execute('[dbo].[OnWardrobePostSegmentation]', (err, result) =>
+        .execute('[dbo].[OnWardrobePostSegmentation]', (err, result, data) =>
         {
           if (err != null)
           {
@@ -140,6 +140,21 @@ async function SegmentImages(session, sessionID, sessionStore, images)
 
           if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
           {
+            for (var i = 0; i < data.length; ++i)
+            {
+              if (data[i].Result == true)
+              {
+                fs.stat(data[i].ImagePath, function(err, stat)
+                {
+                  if (err == null)
+                  {
+                    console.log("Removing: " + data[i].ImagePath)
+                    fs.unlink(data[i].ImagePath)
+                  }
+                });
+              }
+            }
+
             var wardrobe = result.recordset
             
             sessionStore.get(sessionID, (err, newSession) =>
@@ -232,7 +247,15 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
     if (req.files[i].buffer == null)
       continue
 
+    if (
+      req.files[i].mimeType != 'image/png'
+      && req.files[i].mimeType != 'image/jpg'
+      && req.files[i].mimeType != 'image/jpeg'
+    )
+      continue
+
     img = await Jimp.read(req.files[i].buffer)
+    
     if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
       continue
 
@@ -248,6 +271,17 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
       RelativePath: relativePath,
       FullPath: fullPath,
       Status: 2
+    })
+  }
+
+  if (processed_imgs.length == 0)
+  {
+    errors.push('Failed to process sent items, please try again.')
+
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
     })
   }
 
