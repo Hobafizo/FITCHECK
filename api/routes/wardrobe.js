@@ -142,7 +142,7 @@ async function SegmentImages(session, sessionID, sessionStore, images)
         {
           try
           {
-            const file = await fs.stat(data[i].ImagePath);
+            const file = fs.statSync(data[i].ImagePath);
             if (file == null)
             {
               console.log("Removing: " + data[i].ImagePath)
