@@ -134,7 +134,6 @@ async function SegmentImages(session, sessionID, sessionStore, images)
     if (result == null)
       return
 
-    console.log(result.recordset)
     if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
     {
       for (var i = 0; i < data.length; ++i)
@@ -158,6 +157,8 @@ async function SegmentImages(session, sessionID, sessionStore, images)
           }        
         }
       }
+
+      console.log('finished removing items')
 
       var wardrobe = result.recordset
       
