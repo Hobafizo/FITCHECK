@@ -126,62 +126,57 @@ async function SegmentImages(session, sessionID, sessionStore, images)
       }
     }
     
-    var query = await dbOp.request()
+    var query = (await dbOp.request())
+                    .input('UserID', sql.Int, session.user.UserID)
+                    .input('Items', sql.TVP, tvp)
     
-    await query
-        .input('UserID', sql.Int, session.user.UserID)
-        .input('Items', sql.TVP, tvp)
-        .execute('[dbo].[OnWardrobePostSegmentation]', (err, result, data) =>
+    const result = await query.execute('[dbo].[OnWardrobePostSegmentation]')
+    if (result == null)
+      return
+
+    if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
+    {
+      for (var i = 0; i < data.length; ++i)
+      {
+        if (data[i].Result == true)
         {
-          if (err != null)
+          fs.stat(data[i].ImagePath, function(err, stat)
           {
-            console.log(err)
-          }
-
-          if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
-          {
-            for (var i = 0; i < data.length; ++i)
+            if (err == null)
             {
-              if (data[i].Result == true)
-              {
-                fs.stat(data[i].ImagePath, function(err, stat)
-                {
-                  if (err == null)
-                  {
-                    console.log("Removing: " + data[i].ImagePath)
-                    fs.unlink(data[i].ImagePath)
-                  }
-                });
-              }
+              console.log("Removing: " + data[i].ImagePath)
+              fs.unlink(data[i].ImagePath)
             }
+          });
+        }
+      }
 
-            var wardrobe = result.recordset
-            
-            sessionStore.get(sessionID, (err, newSession) =>
-            {
-              if (!err && newSession)
-              {
-                session = newSession
-              }
+      var wardrobe = result.recordset
+      
+      sessionStore.get(sessionID, (err, newSession) =>
+      {
+        if (!err && newSession)
+        {
+          session = newSession
+        }
 
-              if (session.wardrobe == null)
-                session.wardrobe = wardrobe
-              else
-              {
-                for (var i = 0; i < wardrobe.length; ++i)
-                {
-                  const index = session.wardrobe.findIndex(item => item.ItemID === wardrobe[i].ItemID);
-                  if (index !== -1)
-                    session.wardrobe[index] = wardrobe[i]
-                  else
-                    session.wardrobe.push(wardrobe[i])
-                }
-              }
-  
-              sessionStore.set(sessionID, session)
-            });
+        if (session.wardrobe == null)
+          session.wardrobe = wardrobe
+        else
+        {
+          for (var i = 0; i < wardrobe.length; ++i)
+          {
+            const index = session.wardrobe.findIndex(item => item.ItemID === wardrobe[i].ItemID);
+            if (index !== -1)
+              session.wardrobe[index] = wardrobe[i]
+            else
+              session.wardrobe.push(wardrobe[i])
           }
-        })
+        }
+  
+        sessionStore.set(sessionID, session)
+      });
+    }
   }
   catch (error)
   {
