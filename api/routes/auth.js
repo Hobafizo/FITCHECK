@@ -204,12 +204,36 @@ async function GetUserWardrobe(user, session)
           console.log(err)
         }
 
-        if (result == null || result.returnValue != 0 || result.recordset == null || result.recordset.length == 0)
+        if (result == null || result.returnValue != 0 || result.recordsets == null || result.recordsets.length != 2)
         {
           return
         }
 
-        var wardrobe = result.recordset
+        var wardrobe = []
+        var item
+        var tags = []
+        var b = 0
+
+        for (var i = 0; i < result.recordsets[0].length; ++i)
+        {
+          item = result.recordsets[0][i]
+          tags = [];
+          
+          while (b < result.recordsets[1].length && result.recordsets[1][b].ItemID == item.ItemID)
+          {
+            tags.push(
+            {
+                TagID: result.recordsets[1][b]['TagID'],
+                Class: result.recordsets[1][b]['Class'],
+                Tag: result.recordsets[1][b]['Tag'],
+            })
+            b++;
+          }
+
+          item.Tags = tags
+          wardrobe.push(item)
+        }
+
         session.wardrobe = wardrobe
         session.save()
       })
