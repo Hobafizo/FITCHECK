@@ -83,6 +83,25 @@ const storage = multer.memoryStorage()
 const upload = multer({ dest: 'uploads/', storage: storage, limits: { fileSize: 1000 * 1 * 10000 } })
 
 
+function ClearOldImages(images)
+{
+  for (var i = 0; i < images.length; ++i)
+    {
+      if (images[i].Result == true)
+      {
+        try
+        {
+          const file = fs.statSync(images[i].ImagePath);
+          if (file != null)
+            fs.unlinkSync(images[i].ImagePath)
+        }
+        catch (err)
+        {
+        }        
+      }
+    }
+}
+
 async function SegmentImages(session, sessionID, sessionStore, images)
 {
   try
@@ -127,47 +146,44 @@ async function SegmentImages(session, sessionID, sessionStore, images)
       }
     }
     
-    var query = await dbOp.request()
+    var query = (await dbOp.request())
+                    .input('UserID', sql.Int, session.user.UserID)
+                    .input('Items', sql.TVP, tvp)
     
-    await query
-        .input('UserID', sql.Int, session.user.UserID)
-        .input('Items', sql.TVP, tvp)
-        .execute('[dbo].[OnWardrobePostSegmentation]', (err, result) =>
+    const result = await query.execute('[dbo].[OnWardrobePostSegmentation]')
+    if (result == null)
+      return
+
+    if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
+    {
+      ClearOldImages(data)
+
+      var wardrobe = result.recordset
+      
+      sessionStore.get(sessionID, (err, newSession) =>
+      {
+        if (!err && newSession)
         {
-          if (err != null)
+          session = newSession
+        }
+
+        if (session.wardrobe == null)
+          session.wardrobe = wardrobe
+        else
+        {
+          for (var i = 0; i < wardrobe.length; ++i)
           {
-            console.log(err)
+            const index = session.wardrobe.findIndex(item => item.ItemID === wardrobe[i].ItemID);
+            if (index !== -1)
+              session.wardrobe[index] = wardrobe[i]
+            else
+              session.wardrobe.push(wardrobe[i])
           }
-
-          if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
-          {
-            var wardrobe = result.recordset
-            
-            sessionStore.get(sessionID, (err, newSession) =>
-            {
-              if (!err && newSession)
-              {
-                session = newSession
-              }
-
-              if (session.wardrobe == null)
-                session.wardrobe = wardrobe
-              else
-              {
-                for (var i = 0; i < wardrobe.length; ++i)
-                {
-                  const index = session.wardrobe.findIndex(item => item.ItemID === wardrobe[i].ItemID);
-                  if (index !== -1)
-                    session.wardrobe[index] = wardrobe[i]
-                  else
-                    session.wardrobe.push(wardrobe[i])
-                }
-              }
+        }
   
-              sessionStore.set(sessionID, session)
-            });
-          }
-        })
+        sessionStore.set(sessionID, session)
+      });
+    }
   }
   catch (error)
   {
@@ -233,7 +249,15 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
     if (req.files[i].buffer == null)
       continue
 
+    if (
+      req.files[i].mimetype != 'image/png'
+      && req.files[i].mimetype != 'image/jpg'
+      && req.files[i].mimetype != 'image/jpeg'
+    )
+      continue
+
     img = await Jimp.read(req.files[i].buffer)
+    
     if (img == null || img.bitmap.width == 0 || img.bitmap.height == 0)
       continue
 
@@ -250,6 +274,18 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
       FullPath: fullPath,
       Status: 2
     })
+  }
+
+  if (processed_imgs.length == 0)
+  {
+    errors.push('Failed to process sent items, please try again.')
+
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+    return
   }
 
   const tvp = new sql.Table()
@@ -581,6 +617,12 @@ router.post('/delete', DeleteWardrobeValidation, async function(req, res, next) 
     
           else
           {
+            const index = req.session.wardrobe.findIndex(item => item.ItemID === itemid);
+            if (index !== -1)
+            {
+              req.session.wardrobe.splice(index, 1)
+            }
+
             res.send(
             {
               Result: true,
