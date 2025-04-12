@@ -66,6 +66,7 @@ router.get('/', async function(req, res, next) {
         BrandName: req.session.wardrobe[i].BrandName,
         ImagePath: req.session.wardrobe[i].ImagePath,
         Status: req.session.wardrobe[i].Status,
+        Tags: req.session.wardrobe[i].Tags,
       })
     }
   }
@@ -482,6 +483,9 @@ router.post('/modify', ModifyWardrobeValidation, async function(req, res, next) 
             }
           }
 
+          if (result.recordsets == null || result.recordsets.length != 2 || result.recordsets[0].length == 0)
+            errors.push('An error occurred while modfiying wardrobe item, try again later.')
+
           if (errors.length > 0)
           {
             res.send(
@@ -493,6 +497,31 @@ router.post('/modify', ModifyWardrobeValidation, async function(req, res, next) 
     
           else
           {
+            var item = result.recordsets[0][0]
+            var tags = []
+            var b = 0
+
+            while (b < result.recordsets[1].length && result.recordsets[1][b].ItemID == item.ItemID)
+            {
+              tags.push(
+              {
+                  TagID: result.recordsets[1][b]['TagID'],
+                  Class: result.recordsets[1][b]['Class'],
+                  Tag: result.recordsets[1][b]['Tag'],
+              })
+              b++;
+            }
+
+            item.Tags = tags
+
+            const index = req.session.wardrobe.findIndex(it => it.ItemID === item.ItemID);
+            if (index !== -1)
+              req.session.wardrobe[index] = item
+            else
+              req.session.wardrobe.push(item)
+
+            req.session.save()
+
             res.send(
             {
               Result: true,
