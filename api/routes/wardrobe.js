@@ -157,8 +157,6 @@ async function SegmentImages(session, sessionID, sessionStore, images)
           data[i].ColorHex,
           data[i].ColorName
         )
-
-        console.log(data[i].ColorName)
       }
     }
     
@@ -174,8 +172,9 @@ async function SegmentImages(session, sessionID, sessionStore, images)
     {
       ClearOldImages(data)
 
-      var wardrobe = result.recordset[0]
+      var wardrobe = result.recordsets[0]
       var tags = []
+      var b = 0
       
       sessionStore.get(sessionID, (err, newSession) =>
       {
