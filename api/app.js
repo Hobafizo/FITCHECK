@@ -41,11 +41,13 @@ app.use('/wardrobe', wardrobeRouter);
 dbOp.connect()
 
 /*const { OpenWeatherAPI } = require("openweather-api-node")
-const location = "Cairo"
+const location = "El-Qobba Bridge"
+const coords = { lat: 30.079003, lon:  31.2881345 }
 
 let weather = new OpenWeatherAPI({
     key: "0c99d1e20ed6ccb964c9b6155b133411",
-    locationName: location,
+    //locationName: location,
+    coordinates: coords,
     units: "metric"
 })
 
