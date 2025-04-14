@@ -111,6 +111,9 @@ router.post('/login', LoginValidation, async function(req, res, next) {
                   FirstName: user.FirstName,
                   LastName: user.LastName,
                   Email: user.Email,
+                  Gender: user.Gender,
+                  BirthDate: user.BirthDate,
+                  PhoneNum: user.PhoneNum,
                   Verified: user.Verified,
                 })
             }
@@ -576,6 +579,9 @@ router.post('/register', RegisterValidation, async function(req, res, next) {
                   FirstName: user.FirstName,
                   LastName: user.LastName,
                   Email: user.Email,
+                  Gender: user.Gender,
+                  BirthDate: user.BirthDate,
+                  PhoneNum: user.PhoneNum,
                   Verified: user.Verified,
                 })
             }

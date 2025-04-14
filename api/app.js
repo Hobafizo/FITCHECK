@@ -17,7 +17,8 @@ var app = express();
 app.use(session({
     secret: "m#4c4^)f9jgmb@*c",
     saveUninitialized: true,
-    resave: true
+    resave: true,
+    //maxAge: 365 * 24 * 60 * 60 * 1000
 }));
 
 // view engine setup
