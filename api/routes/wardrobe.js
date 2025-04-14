@@ -157,6 +157,8 @@ async function SegmentImages(session, sessionID, sessionStore, images)
           data[i].ColorHex,
           data[i].ColorName
         )
+
+        console.log(data[i].ColorName)
       }
     }
     
@@ -168,17 +170,36 @@ async function SegmentImages(session, sessionID, sessionStore, images)
     if (result == null)
       return
 
-    if (result.returnValue == 0 && result.recordset != null && result.recordset.length > 0)
+    if (result.returnValue == 0 && result.recordsets != null && result.recordsets.length == 2)
     {
       ClearOldImages(data)
 
-      var wardrobe = result.recordset
+      var wardrobe = result.recordset[0]
+      var tags = []
       
       sessionStore.get(sessionID, (err, newSession) =>
       {
         if (!err && newSession)
         {
           session = newSession
+        }
+
+        for (var i = 0; i < wardrobe.length; ++i)
+        {
+          tags = [];
+
+          while (b < result.recordsets[1].length && result.recordsets[1][b].ItemID == wardrobe[i].ItemID)
+          {
+            tags.push(
+            {
+                TagID: result.recordsets[1][b]['TagID'],
+                Class: result.recordsets[1][b]['Class'],
+                Tag: result.recordsets[1][b]['Tag'],
+            })
+            b++;
+          }
+
+          wardrobe[i].Tags = tags
         }
 
         if (session.wardrobe == null)
