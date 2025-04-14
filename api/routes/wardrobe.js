@@ -65,6 +65,7 @@ router.get('/', async function(req, res, next) {
         ItemName: req.session.wardrobe[i].ItemName,
         BrandName: req.session.wardrobe[i].BrandName,
         ImagePath: req.session.wardrobe[i].ImagePath,
+        Color: req.session.wardrobe[i].Color,
         Status: req.session.wardrobe[i].Status,
         Tags: req.session.wardrobe[i].Tags,
       })
@@ -129,19 +130,32 @@ async function SegmentImages(session, sessionID, sessionStore, images)
     
     const appDir = path.dirname(require.main.filename).replace('api\\bin', 'api') + '\\'
     var imgsToUpdate = []
+    var colorHex
 
     const tvp = new sql.Table()
     tvp.name = 'WardrobeItemsToUpdate'
     tvp.columns.add('ImagePath', sql.VarChar(200))
     tvp.columns.add('CleanPath', sql.VarChar(200))
+    tvp.columns.add('ColorHex', sql.VarChar(6))
+    tvp.columns.add('ColorName', sql.VarChar(30))
 
     for (var i = 0; i < data.length; ++i)
     {
       if (data[i].Result == true)
       {
+        colorHex = ""
+        for (var b = 0; b < data[i].ColorRGB.length; ++b)
+        {
+          colorHex += ('00' + data[i].ColorRGB[b].toString(16).toUpperCase()).slice(-2)
+        }
+
+        data[i].ColorHex = colorHex
+
         tvp.rows.add(
           data[i].ImagePath.replace(appDir, ''),
-          data[i].OutputPath.replace(appDir, '')
+          data[i].OutputPath.replace(appDir, ''),
+          data[i].ColorHex,
+          data[i].ColorName
         )
       }
     }
