@@ -102,6 +102,8 @@ router.post('/login', LoginValidation, async function(req, res, next) {
               req.session.save()
 
               GetUserWardrobe(user, req.session)
+              GetUserOutfitSuggestions(user, req.session)
+              GetUserOutfits(user, req.session)
 
               res.send(
                 {
@@ -238,6 +240,58 @@ async function GetUserWardrobe(user, session)
         }
 
         session.wardrobe = wardrobe
+        session.save()
+      })
+}
+
+
+async function GetUserOutfitSuggestions(user, session)
+{
+  var query = await dbOp.request()
+
+  await query
+      .input('UserID', sql.Int, user.UserID)
+      .execute('[dbo].[GetOutfitSuggestions]', (err, result) =>
+      {
+        if (err != null)
+        {
+          console.log(err)
+        }
+
+        if (result == null || result.returnValue != 0 || result.recordsets == null || result.recordsets.length != 1)
+        {
+          return
+        }
+
+        var suggestions = result.recordsets[0]
+
+        session.suggestions = suggestions
+        session.save()
+      })
+}
+
+
+async function GetUserOutfits(user, session)
+{
+  var query = await dbOp.request()
+
+  await query
+      .input('UserID', sql.Int, user.UserID)
+      .execute('[dbo].[GetUserOutfits]', (err, result) =>
+      {
+        if (err != null)
+        {
+          console.log(err)
+        }
+
+        if (result == null || result.returnValue != 0 || result.recordsets == null || result.recordsets.length != 1)
+        {
+          return
+        }
+
+        var outfits = result.recordsets[0]
+
+        session.outfits = outfits
         session.save()
       })
 }
@@ -568,7 +622,6 @@ router.post('/register', RegisterValidation, async function(req, res, next) {
               req.session.user = user
               req.session.save()
 
-              GetUserWardrobe(user, req.session)
               SendUserVerifyCode(user, req.session)
 
               res.send(
