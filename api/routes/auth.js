@@ -463,7 +463,7 @@ RegisterValidation = checkSchema(
     Gender:
     {
       notEmpty: true,
-      isIn: { options: ['M', 'F'] },
+      isIn: { options: "M,F" },
       errorMessage: 'Please enter a valid gender.',
     },
 
