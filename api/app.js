@@ -40,26 +40,6 @@ app.use('/wardrobe', wardrobeRouter);
 // Open database connection
 dbOp.connect()
 
-/*const { OpenWeatherAPI } = require("openweather-api-node")
-const location = "El-Qobba Bridge"
-const coords = { lat: 30.079003, lon:  31.2881345 }
-
-let weather = new OpenWeatherAPI({
-    key: "0c99d1e20ed6ccb964c9b6155b133411",
-    //locationName: location,
-    coordinates: coords,
-    units: "metric"
-})
-
-// you can use setters as well:
-// weather.setKey("put-key-here")
-// weather.setLocationByName("New York")
-// ...
-
-weather.getCurrent().then(data => {
-    console.log(`Current temperature in ${location} is: ${data.weather.temp.cur}\u00B0C`)
-})*/
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

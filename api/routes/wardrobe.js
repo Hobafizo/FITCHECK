@@ -13,6 +13,11 @@ var dbOp = require('../sql/dbOperations')
 var email = require('../email/emailService')
 
 const {
+  getWeatherTemp,
+  getWeatherSeason
+} = require('../weather/weatherService')
+
+const {
   check,
   body,
   // ...
@@ -674,5 +679,270 @@ router.post('/delete', DeleteWardrobeValidation, async function(req, res, next) 
     })
   }
 });
+
+
+OutfitRecommendationValidation = checkSchema(
+  {
+    CheckWeather:
+    {
+      notEmpty: false,
+      isBoolean: true,
+      errorMessage: 'Please specify if you want to automatically check the weather for you.',
+    },
+    LocationLat:
+    {
+      optional: true,
+      isFloat: true,
+      errorMessage: 'Please provide a valid map location lat point.',
+    },
+    LocationLon:
+    {
+      optional: true,
+      isFloat: true,
+      errorMessage: 'Please provide a valid map location lon point.',
+    },
+    FilterTags:
+    {
+      optional: true,
+      isArray: true,
+      errorMessage: 'Please send filter tags properly.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/getrecommendation', OutfitRecommendationValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+
+    if (req.body.CheckWeather != null && req.body.CheckWeather == true)
+    {
+      if (req.body.LocationLat == null)
+        errors.push('Please provide a map location lat point.')
+      if (req.body.LocationLon == null)
+        errors.push('Please provide a map location lon point.')
+    }
+  }
+
+  if (errors.length == 0 && req.body.CheckWeather == true)
+  {
+    var seasons = await getWeatherSeason(req.body.LocationLat, req.body.LocationLon)
+    if (seasons != null)
+    {
+      const seasontags = seasons.map((s) => ({ 'Class': 'Season', 'Tag': s }))
+      for (var i = 0; i < seasontags.length; ++i)
+        req.body.FilterTags.push(seasontags[i])
+    }
+    else
+      errors.push('Failed to retrieve weather information, please try again.')
+  }
+
+  if (errors.length == 0)
+  {
+    const tags = req.body.FilterTags
+
+    const tvp = new sql.Table()
+    tvp.name = 'TagList'
+    tvp.columns.add('Class', sql.VarChar(50))
+    tvp.columns.add('Tag', sql.VarChar(50))
+  
+    if (tags != null)
+    {
+      for (var i = 0; i < tags.length; ++i)
+      {
+        if (tags[i].Class != null && tags[i].Tag != null)
+        {
+          tvp.rows.add(tags[i].Class, tags[i].Tag)
+        }
+      }
+    }
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('Filters', sql.TVP, tvp)
+        .execute('[dbo].[GenerateOutfit]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result == null || result.returnValue != 0 || result.recordsets == null || result.recordsets.length != 1)
+            errors.push('An error occurred during outfit recommendation, try again later.')
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            var suggestions = result.recordsets[0]
+
+            if (req.session.suggestions == null)
+              req.session.suggestions = suggestions
+            else
+            {
+              for (var i = 0; i < suggestions.length; ++i)
+                req.session.suggestions.push(suggestions[i])
+            }
+
+            res.send(
+            {
+              Result: true,
+              Suggestions: suggestions.map((s) => (
+              {
+                'SugID': s['SugID'],
+                'ItemID': s['ItemID']
+              }))
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+router.get('/recommendations', async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const SuggestionMax = 5;
+    var suggestions_count = 0, cur_sug = 0
+
+    const suggestions = req.session.suggestions
+    var output = []
+
+    for (var i = suggestions.length - 1; i >= 0; --i)
+    {
+      if (suggestions[i]['SugID'] != cur_sug)
+      {
+        cur_sug = suggestions[i]['SugID']
+        if (++suggestions_count > SuggestionMax)
+          break
+      }
+
+      output.push(suggestions[i])
+    }
+
+    res.send(
+    {
+      Result: true,
+      Suggestions: output.map((s) => (
+      {
+        'SugID': s['SugID'],
+        'ItemID': s['ItemID']
+      }))
+    })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+router.get('/outfits', async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const outfits = req.session.outfits
+
+    res.send(
+    {
+      Result: true,
+      Outfits: outfits.map((s) => (
+      {
+        'SugID': s['SugID'],
+        'ItemID': s['ItemID']
+      }))
+    })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
 
 module.exports = router;
