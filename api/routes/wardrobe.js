@@ -929,9 +929,241 @@ router.get('/outfits', async function(req, res, next) {
       Outfits: outfits.map((s) => (
       {
         'SugID': s['SugID'],
-        'ItemID': s['ItemID']
+        'ItemID': s['ItemID'],
+        'Favorite': s['Favorite'],
       }))
     })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+SaveOutfitValidation = checkSchema(
+  {
+    SugID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which recommended outfit you would like to save.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/saveoutfit', SaveOutfitValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const sugid = req.body.SugID
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('SugID', sql.Int, sugid)
+        .execute('[dbo].[SaveOutfitSuggestion]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+              case 4:
+                errors.push('An error occurred while saving recommended outfit, try again later.')
+                break
+
+              case 2:
+                errors.push('Could not find this outfit recommendation, please reload and try again.')
+                break
+
+              case 3:
+                errors.push('Could not find any item in recommended outfit, please pick different one.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            var outfits = result.recordsets[0]
+
+            if (req.session.outfits == null)
+              req.session.outfits = outfits
+            else
+            {
+              for (var i = 0; i < outfits.length; ++i)
+                req.session.outfits.push(outfits[i])
+            }
+
+            res.send(
+            {
+              Result: true,
+              Outfits: outfits.map((s) => (
+              {
+                'OutfitID': s['OutfitID'],
+                'ItemID': s['ItemID'],
+                'Favorite': s['Favorite'],
+              }))
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+SetFavoriteValidation = checkSchema(
+  {
+    OutfitID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which outfit you would like to set as favorite.',
+    },
+
+    Favorite:
+    {
+      isBoolean: true,
+      errorMessage: 'Favorite field is required.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/setfavorite', SetFavoriteValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const outfitid = req.body.OutfitID
+    const favorite = req.body.Favorite
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('OutfitID', sql.Int, outfitid)
+        .input('Favorite', sql.Bit, favorite)
+        .execute('[dbo].[ToggleOutfitFavorite]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('An error occurred while saving recommended outfit, try again later.')
+                break
+
+              case 2:
+                errors.push('Could not find this outfit, please reload and try again.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            if (req.session.outfits != null && req.session.outfits.length > 0)
+            {
+              for (var i = 0; i < req.session.outfits.length; ++i)
+              {
+                if (req.session.outfits[i].OutfitID == outfitid)
+                  req.session.outfits[i].Favorite = favorite;
+
+                else if (req.session.outfits[i].OutfitID > outfitid)
+                  break;
+              }
+
+              req.session.save()
+            }
+
+            res.send(
+            {
+              Result: true,
+            })
+          }
+        })
   }
 
   else
