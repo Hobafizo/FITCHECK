@@ -928,7 +928,7 @@ router.get('/outfits', async function(req, res, next) {
       Result: true,
       Outfits: outfits.map((s) => (
       {
-        'SugID': s['SugID'],
+        'OutfitID': s['OutfitID'],
         'ItemID': s['ItemID'],
         'Favorite': s['Favorite'],
       }))
