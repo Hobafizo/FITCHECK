@@ -746,7 +746,7 @@ router.post('/getrecommendation', OutfitRecommendationValidation, async function
     var seasons = await getWeatherSeason(req.body.LocationLat, req.body.LocationLon)
     if (seasons != null)
     {
-      const seasontags = seasons.map((s) => ({ 'Class': 'Season', 'Tag': s }))
+      const seasontags = seasons?.map((s) => ({ 'Class': 'Season', 'Tag': s }))
       for (var i = 0; i < seasontags.length; ++i)
         req.body.FilterTags.push(seasontags[i])
     }
@@ -814,7 +814,7 @@ router.post('/getrecommendation', OutfitRecommendationValidation, async function
             res.send(
             {
               Result: true,
-              Suggestions: suggestions.map((s) => (
+              Suggestions: suggestions?.map((s) => (
               {
                 'SugID': s['SugID'],
                 'ItemID': s['ItemID']
@@ -879,7 +879,7 @@ router.get('/recommendations', async function(req, res, next) {
     res.send(
     {
       Result: true,
-      Suggestions: output.map((s) => (
+      Suggestions: output?.map((s) => (
       {
         'SugID': s['SugID'],
         'ItemID': s['ItemID']
@@ -921,12 +921,12 @@ router.get('/outfits', async function(req, res, next) {
 
   if (errors.length == 0)
   {
-    const outfits = req.session.outfits
+    const outfits = req.session.outfits;
 
     res.send(
     {
       Result: true,
-      Outfits: outfits.map((s) => (
+      Outfits: outfits?.map((s) => (
       {
         'SugID': s['SugID'],
         'ItemID': s['ItemID']
