@@ -1,4 +1,4 @@
-# FitCheck - Outfit Recommendation and Management System
+# FitCheck - Outfit Recommendation System
 
 In the digital age, personalization and convenience have become key components in enhancing user experience across various industries, including fashion. With the rise of e-commerce, virtual try-on technologies, and AI-driven styling platforms, people are increasingly relying on digital tools to assist in making fashion decisions. However, despite these advancements, many users still face the daily struggle of deciding what to wear from their own wardrobes—often without guidance that is tailored to their specific context, such as current weather conditions, the formality of the occasion, or their personal style preferences.
 
