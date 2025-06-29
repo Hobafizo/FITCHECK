@@ -1,0 +1,88 @@
+import torch
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
+from typing import List
+from pathlib import Path
+import cv2
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+import uvicorn
+import os
+
+app = FastAPI()
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
+sam = sam_model_registry["vit_h"](checkpoint="Checkpoints\\sam_vit_h_4b8939.pth").to(device=device)
+
+mask_generator = SamAutomaticMaskGenerator(sam)
+
+class ImagePaths(BaseModel):
+    Images: List[str]
+
+def segment_image(image, image_path):
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    sam_result = mask_generator.generate(image_rgb)
+    
+    largest, second_largest = None, None
+    for result in sam_result:
+        if largest is None or result['area'] > largest['area']:
+            second_largest = largest
+            largest = result
+        elif second_largest is None or result['area'] > second_largest['area']:
+            second_largest = result
+
+    if second_largest is None:
+        return None  
+
+    
+    mask = second_largest["segmentation"]
+    image_rgba = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2RGBA)
+    image_rgba[~mask] = [0, 0, 0, 0]
+
+    output_path = Path(image_path.replace("\\wardrobe\\", "\\wardrobe_clean\\")).with_suffix('.png')
+
+    cv2.imwrite(output_path, image_rgba)
+    return output_path
+
+@app.post("/segment")
+async def segment_endpoint(image_data: ImagePaths):
+    """API endpoint to process multiple images and return the results."""
+    results = []
+
+    for image_path in image_data.Images:
+        if not os.path.exists(image_path):
+            results.append({
+                "ImagePath": image_path,
+                "Result": False,
+                "Errors": ["Image path does not exist"]
+            })
+            continue
+
+        img = cv2.imread(image_path)
+        if img is None:
+            results.append({
+                "ImagePath": image_path,
+                "Result": False,
+                "Errors": ["Failed to load image"]
+            })
+            continue
+
+        output_path = segment_image(img, image_path)
+        if output_path:
+            results.append({
+                "ImagePath": image_path,
+                "Result": True,
+                "OutputPath": output_path
+            })
+        else:
+            results.append({
+                "ImagePath": image_path,
+                "Result": False,
+                "Errors": ["Segmentation failed"]
+            })
+
+    return results
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=5000)
