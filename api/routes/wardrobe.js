@@ -658,6 +658,7 @@ router.post('/delete', DeleteWardrobeValidation, async function(req, res, next) 
             if (index !== -1)
             {
               req.session.wardrobe.splice(index, 1)
+              req.session.save();
             }
 
             res.send(
@@ -1157,6 +1158,112 @@ router.post('/setfavorite', SetFavoriteValidation, async function(req, res, next
               req.session.save()
             }
 
+            res.send(
+            {
+              Result: true,
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+RateSuggestionValidation = checkSchema(
+  {
+    SugID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which suggestion you would like to submit a rating for.',
+    },
+    Rate:
+    {
+      isInt: true,
+      errorMessage: 'Please specify your rating for this suggestion.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/rate', DeleteWardrobeValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const sugid = req.body.SugID
+    const rate = req.body.Rate
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('SugID', sql.Int, sugid)
+        .input('Rate', sql.TinyInt, rate)
+        .execute('[dbo].[SubmitOutfitSuggestionRate]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+              case 4:
+                errors.push('An error occurred while rating outfit suggestion, try again later.')
+                break
+
+              case 2:
+                errors.push('Could not find this outfit suggestion, please reload and try again.')
+                break
+
+              case 4:
+                errors.push('You have already rated this suggestion, you may submit your feedback once only. Thank you for your feedback.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
             res.send(
             {
               Result: true,
