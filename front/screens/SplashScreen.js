@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 function SplashScreen() {
   const navigation = useNavigation();
 
-  setTimeout(() => navigation.replace("Auth"), 2500);
+  setTimeout(() => navigation.replace("MainApp"), 2500);
 
   return (
     <View style={styles.screen}>

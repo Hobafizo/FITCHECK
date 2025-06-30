@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonWrapper: {
-    flex: 1,
+    flex: 3,
     height: 60,
     borderRadius: 12,
     overflow: "hidden",
