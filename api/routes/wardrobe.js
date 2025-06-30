@@ -24,7 +24,14 @@ const {
   validationResult,
   checkSchema,
 } = require("express-validator");
+
 const { error } = require('console')
+
+const {
+  GetUserWardrobe,
+  GetUserOutfitSuggestions,
+  GetUserOutfits
+} = require('./helper');
 
 
 router.get('/', async function(req, res, next) {
@@ -212,7 +219,7 @@ async function SegmentImages(session, sessionID, sessionStore, images)
         {
           for (var i = 0; i < wardrobe.length; ++i)
           {
-            const index = session.wardrobe.findIndex(item => item.ItemID === wardrobe[i].ItemID);
+            const index = session.wardrobe.findIndex(item => item.ItemID == wardrobe[i].ItemID);
             if (index !== -1)
               session.wardrobe[index] = wardrobe[i]
             else
@@ -380,7 +387,7 @@ router.post('/add', AddWardrobeValidation, upload.array('ItemImages'), async fun
     {
       for (var i = 0; i < wardrobe.length; ++i)
       {
-        const index = req.session.wardrobe.findIndex(item => item.ItemID === wardrobe[i].ItemID);
+        const index = req.session.wardrobe.findIndex(item => item.ItemID == wardrobe[i].ItemID);
         if (index !== -1)
           req.session.wardrobe[index] = wardrobe[i]
         else
@@ -552,7 +559,7 @@ router.post('/modify', ModifyWardrobeValidation, async function(req, res, next) 
 
             item.Tags = tags
 
-            const index = req.session.wardrobe.findIndex(it => it.ItemID === item.ItemID);
+            const index = req.session.wardrobe.findIndex(it => it.ItemID == item.ItemID);
             if (index !== -1)
               req.session.wardrobe[index] = item
             else
@@ -654,12 +661,18 @@ router.post('/delete', DeleteWardrobeValidation, async function(req, res, next) 
     
           else
           {
-            const index = req.session.wardrobe.findIndex(item => item.ItemID === itemid);
+            const index = req.session.wardrobe.findIndex(item => item.ItemID == itemid);  
             if (index !== -1)
             {
               req.session.wardrobe.splice(index, 1)
-              req.session.save();
             }
+
+            if (req.session.outfits != null)
+            {
+              req.session.outfits = req.session.outfits.filter(outfit => outfit.ItemID != itemid);
+            }
+
+            req.session.save();
 
             res.send(
             {
@@ -951,7 +964,7 @@ SaveOutfitValidation = checkSchema(
     SugID:
     {
       isInt: true,
-      errorMessage: 'Please specify which recommended outfit you would like to save.',
+      errorMessage: 'Please specify which outfit suggestion you would like to save.',
     },
   },
   ["body"]
@@ -1045,6 +1058,355 @@ router.post('/saveoutfit', SaveOutfitValidation, async function(req, res, next) 
                 'ItemID': s['ItemID'],
                 'Favorite': s['Favorite'],
               }))
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+DeleteOutfitValidation = checkSchema(
+  {
+    OutfitID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which outfit you would like to delete.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/deleteoutfit', DeleteOutfitValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const outfitid = req.body.OutfitID
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('OutfitID', sql.Int, outfitid)
+        .execute('[dbo].[OnUserOutfitDelete]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+              case 3:
+                errors.push('An error occurred while deleting outfit, try again later.')
+                break
+
+              case 2:
+                errors.push('Could not find this outfit, please reload and try again.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            if (req.session.outfits != null)
+            {
+              req.session.outfits = req.session.outfits.filter(outfit => outfit.OutfitID != outfitid);
+              req.session.save();
+            }
+
+            res.send(
+            {
+              Result: true,
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+AddOutfitItemValidation = checkSchema(
+  {
+    OutfitID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which outfit you would like to add an item to.',
+    },
+    ItemID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which item you would like to add to this outfit.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/addoutfititem', AddOutfitItemValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const outfitid = req.body.OutfitID
+    const itemid = req.body.ItemID
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('OutfitID', sql.Int, outfitid)
+        .input('ItemID', sql.Int, itemid)
+        .execute('[dbo].[OnUserOutfitAddItem]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+              case 5:
+                errors.push('An error occurred while adding item to an outfit, try again later.')
+                break
+
+              case 2:
+                errors.push('Could not find this outfit, please reload and try again.')
+                break
+
+              case 3:
+                errors.push('You already have this item in your outfit.')
+                break
+
+              case 4:
+                errors.push('Could not find this item, please reload and try again.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            if (req.session.outfits != null && result.recordset != null && result.recordset.length > 0)
+            {
+              const outfit = result.recordset[0]
+              console.log(outfit)
+
+              // Find the index of the *last* occurrence of this outfit id
+              const lastIndex = [...req.session.outfits].reverse().findIndex(item => item.OutfitID == outfitid);
+
+              // If found, calculate the correct index in original array
+              if (lastIndex !== -1)
+              {
+                const insertIndex = req.session.outfits.length - lastIndex;
+                req.session.outfits.splice(insertIndex, 0,
+                  {
+                    OutfitID: outfitid,
+                    ItemID: itemid,
+                    Favorite: outfit['Favorite']
+                  });
+              }
+              
+              req.session.save();
+            }
+
+            res.send(
+            {
+              Result: true,
+            })
+          }
+        })
+  }
+
+  else
+  {
+    res.send(
+    {
+      Result: false,
+      Errors: errors,
+    })
+  }
+});
+
+
+DeleteOutfitItemValidation = checkSchema(
+  {
+    OutfitID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which outfit you would like to delete an item from.',
+    },
+    ItemID:
+    {
+      isInt: true,
+      errorMessage: 'Please specify which item you would like to delete from this outfit.',
+    },
+  },
+  ["body"]
+)
+
+
+router.post('/deleteoutfititem', DeleteOutfitItemValidation, async function(req, res, next) {
+  var errors = [];
+
+  if (req.session.user == null)
+    errors.push('You are not logged in!')
+
+  else if (!req.session.user.Verified)
+    errors.push('Your account must be verified to perform this action.')
+
+  else
+  {
+    // extract the data validation result
+    const result = validationResult(req)
+    
+    if (!result.isEmpty())
+    {
+      for (var i = 0; i < result.array().length; ++i)
+        errors.push(result.array()[i].msg)
+    }
+  }
+
+  if (errors.length == 0)
+  {
+    const outfitid = req.body.OutfitID
+    const itemid = req.body.ItemID
+
+    var query = await dbOp.request()
+
+    await query
+        .input('UserID', sql.Int, req.session.user.UserID)
+        .input('OutfitID', sql.Int, outfitid)
+        .input('ItemID', sql.Int, itemid)
+        .execute('[dbo].[OnUserOutfitDeleteItem]', (err, result) =>
+        {
+          if (err != null)
+          {
+            errors.push('An error occurred while performing this action, report this to an admin.')
+            console.log(err)
+          }
+
+          if (result != null)
+          {
+            switch (result.returnValue)
+            {
+              case 1:
+                errors.push('An error occurred while deleting item from an outfit, try again later.')
+                break
+
+              case 2:
+                errors.push('Could not find this outfit, please reload and try again.')
+                break
+
+              case 3:
+                errors.push('Could not find this item, please reload and try again.')
+                break
+            }
+          }
+
+          if (errors.length > 0)
+          {
+            res.send(
+            {
+              Result: false,
+              Errors: errors,
+            })
+          }
+    
+          else
+          {
+            if (req.session.outfits != null)
+            {
+              const index = req.session.outfits.findIndex(item => item.OutfitID == outfitid && item.ItemID == itemid);
+              if (index !== -1)
+              {
+                req.session.outfits.splice(index, 1)
+                req.session.save();
+              }
+            }
+
+            res.send(
+            {
+              Result: true,
             })
           }
         })
@@ -1194,7 +1556,7 @@ RateSuggestionValidation = checkSchema(
 )
 
 
-router.post('/rate', DeleteWardrobeValidation, async function(req, res, next) {
+router.post('/rate', RateSuggestionValidation, async function(req, res, next) {
   var errors = [];
 
   if (req.session.user == null)
@@ -1247,7 +1609,7 @@ router.post('/rate', DeleteWardrobeValidation, async function(req, res, next) {
                 errors.push('Could not find this outfit suggestion, please reload and try again.')
                 break
 
-              case 4:
+              case 3:
                 errors.push('You have already rated this suggestion, you may submit your feedback once only. Thank you for your feedback.')
                 break
             }
