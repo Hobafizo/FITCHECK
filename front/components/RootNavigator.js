@@ -10,8 +10,8 @@ function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
-      <Stack.Screen name="MainApp" component={NavBar} />
       <Stack.Screen name="Auth" component={AuthNavigator} />
+      <Stack.Screen name="MainApp" component={NavBar} />
     </Stack.Navigator>
   );
 }

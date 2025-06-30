@@ -4,7 +4,7 @@ import { useLocationStore } from "../store/locationStore";
 
 const WeatherCard = () => {
   const [weather, setWeather] = useState();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const city = useLocationStore((state) => state.city);
   const coords = useLocationStore((state) => state.coords);
   const currentDate = new Date();

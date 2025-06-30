@@ -8,6 +8,7 @@ import GenerationScreen from "../screens/GenerationScreen";
 import colors from "../assets/colors/colors";
 import GeneratedOutfitScreen from "../screens/GeneratedOutfitScreen";
 import ItemScreen from "../screens/ItemScreen";
+import SelectItemScreen from "../screens/SelecteItemScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -19,28 +20,29 @@ function OutfitsTab() {
         component={OutfitsScreen}
         options={{
           headerShown: true,
+          headerTitleAlign: "center",
           headerStyle: { backgroundColor: colors.main },
           headerTitle: "All Outfits",
           headerTitleStyle: { fontFamily: "higuen", fontSize: 32 },
           headerShadowVisible: false,
-          headerRight: () => (
-            <View style={{ height: "100%", aspectRatio: 1 }}>
-              <Pressable
-                style={{
-                  height: "100%",
-                  width: "100%",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onPress={() => console.log("settings pressed")}
-              >
-                <Image
-                  source={require("../assets/images/tools/customizer.png")}
-                  style={{ height: "30", width: "30" }}
-                />
-              </Pressable>
-            </View>
-          ),
+          // headerRight: () => (
+          //   <View style={{ height: "100%", aspectRatio: 1 }}>
+          //     <Pressable
+          //       style={{
+          //         height: "100%",
+          //         width: "100%",
+          //         justifyContent: "center",
+          //         alignItems: "center",
+          //       }}
+          //       onPress={() => console.log("settings pressed")}
+          //     >
+          //       <Image
+          //         source={require("../assets/images/tools/customizer.png")}
+          //         style={{ height: "30", width: "30" }}
+          //       />
+          //     </Pressable>
+          //   </View>
+          // ),
         }}
       />
       <Stack.Screen
@@ -95,6 +97,21 @@ function OutfitsTab() {
         options={{
           headerShown: true,
           title: "Generated Outfit",
+          headerTitleStyle: {
+            fontFamily: "higuen",
+            fontSize: 30,
+          },
+          headerStyle: { backgroundColor: colors.main },
+          headerShadowVisible: false,
+          headerTitleAlign: "center",
+        }}
+      />
+      <Stack.Screen
+        name="SelectItemScreen"
+        component={SelectItemScreen}
+        options={{
+          headerShown: true,
+          title: "Select Item",
           headerTitleStyle: {
             fontFamily: "higuen",
             fontSize: 30,

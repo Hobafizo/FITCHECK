@@ -85,7 +85,15 @@ function OutfitsScreen({ route }) {
 
   function handleFiltering() {
     let filteredList;
-    if (isFavorites == true) {
+    if (isRecent && isFavorites) {
+      console.log("here");
+
+      filteredList = outfits
+        .slice(0, 3)
+        .filter((outfit) => outfit.Favorite === true);
+    } else if (isRecent && !isFavorites) {
+      filteredList = outfits.slice(0, 3);
+    } else if (isFavorites && !isRecent) {
       filteredList = outfits.filter((outfit) => outfit.Favorite === true);
     } else {
       filteredList = outfits;

@@ -15,16 +15,45 @@ import { outfitsDummyData } from "../store/data";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useWardrobeStore } from "../store/wardrobeStore";
+import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
 function GeneratedOutfitScreen({ route }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [generatedOutfits, setGeneratedOutfits] = useState([]);
-
+  const [rate, setRate] = useState(-1);
   const [outfitColors, setOutfitColors] = useState([]);
   const wardrobeItems = useWardrobeStore((state) => state.wardrobeItems);
   const { suggestions, tags } = route.params;
+
+  const handleRate = async (values) => {
+    console.log("Hi: ", values);
+
+    try {
+      const res = await fetch(
+        process.env.EXPO_PUBLIC_API_HOST + "/wardrobe/rate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.Result == false) {
+        // showToast("Error", data.Errors[0]);
+        console.log("Error", data.Errors[0]);
+      } else {
+        console.log("heyy: ", data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleSave = async (values) => {
     console.log("ex: ", values);
@@ -213,14 +242,51 @@ function GeneratedOutfitScreen({ route }) {
                 </Text>
               </Pressable>
             </View>
-            <View style={styles.buttonWrapper}>
+            <View style={styles.miniButtonWrapper}>
+              <Pressable
+                style={styles.dislikeButton}
+                onPress={() => {
+                  setRate(0);
+                  handleRate({
+                    SugID: generatedOutfits[currentIndex].SugID,
+                    Rate: 0,
+                  });
+                }}
+              >
+                <Ionicons
+                  name={rate === 0 ? "thumbs-down" : "thumbs-down-outline"}
+                  size={30}
+                  color={"white"}
+                />
+              </Pressable>
+            </View>
+            <View style={styles.miniButtonWrapper}>
+              <Pressable
+                style={styles.likeButton}
+                onPress={() => {
+                  setRate(1);
+                  handleRate({
+                    SugID: generatedOutfits[currentIndex].SugID,
+                    Rate: 1,
+                  });
+                }}
+              >
+                <Ionicons
+                  name={rate === 1 ? "thumbs-up" : "thumbs-up-outline"}
+                  size={30}
+                  color={"white"}
+                />
+              </Pressable>
+            </View>
+
+            {/* <View style={styles.buttonWrapper}>
               <Pressable
                 style={styles.rerunButton}
                 android_ripple={{ color: "rgba(0,0,0,0.1)" }}
               >
                 <Text style={styles.buttonText}>Rerun</Text>
               </Pressable>
-            </View>
+            </View> */}
           </View>
         </>
       )}
@@ -305,6 +371,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     justifyContent: "center",
     alignItems: "center",
+    elevation: 2,
   },
   rerunButton: {
     flex: 1,
@@ -323,6 +390,26 @@ const styles = StyleSheet.create({
     color: "white",
     fontFamily: "higuen",
   },
+  miniButtonWrapper: {
+    height: "60",
+    aspectRatio: 1,
+    borderRadius: 10,
+    elevation: 2,
+    overflow: "hidden",
+  },
+  likeButton: {
+    flex: 1,
+    backgroundColor: "#0a6a22",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dislikeButton: {
+    flex: 1,
+    backgroundColor: "#de0e34",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   changePreferencesButton: {
     textAlign: "center",
     lineHeight: 60,

@@ -15,6 +15,7 @@ function WardrobeTab() {
         component={WardrobeScreen}
         options={{
           headerShown: true,
+
           headerStyle: { backgroundColor: colors.main },
           headerTitle: "Wardrobe",
           headerTitleStyle: { fontFamily: "higuen", fontSize: 32 },
@@ -48,6 +49,7 @@ function WardrobeTab() {
         component={ProcessingScreen}
         options={{ headerShown: false }}
       />
+      
     </Stack.Navigator>
   );
 }
