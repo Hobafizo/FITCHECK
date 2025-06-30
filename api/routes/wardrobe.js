@@ -405,7 +405,6 @@ ModifyWardrobeValidation = checkSchema(
   {
     ItemID:
     {
-      notEmpty: true,
       isInt: true,
       errorMessage: 'Please specify which wardrobe item you would like to modify.',
     },
@@ -584,7 +583,6 @@ DeleteWardrobeValidation = checkSchema(
   {
     ItemID:
     {
-      notEmpty: true,
       isInt: true,
       errorMessage: 'Please specify which wardrobe item you would like to delete.',
     },
@@ -685,7 +683,6 @@ OutfitRecommendationValidation = checkSchema(
   {
     CheckWeather:
     {
-      notEmpty: false,
       isBoolean: true,
       errorMessage: 'Please specify if you want to automatically check the weather for you.',
     },
@@ -740,6 +737,8 @@ router.post('/getrecommendation', OutfitRecommendationValidation, async function
         errors.push('Please provide a map location lon point.')
     }
   }
+
+  req.body.FilterTags = req.body.FilterTags ?? [];
 
   if (errors.length == 0 && req.body.CheckWeather == true)
   {
