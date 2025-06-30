@@ -6,6 +6,8 @@ var conObj =
     database: process.env.SQL_DB,
     user: process.env.SQL_USER,
     password: process.env.SQL_PASS,
+    connectionTimeout: 50000,
+    requestTimeout: 50000
 };
 
 var sqlCon;
