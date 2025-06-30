@@ -16,12 +16,14 @@ import colors from "../assets/colors/colors";
 import Pill from "../components/you screen/Pill";
 import { Ionicons } from "@expo/vector-icons";
 import { useFormik } from "formik";
+import { preferencesStore } from "../store/preferencesStore";
 
 function GenerationScreen() {
   const navigation = useNavigation();
   const [isAuto, setIsAuto] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const coords = useLocationStore((state) => state.coords);
+  const generalPreferences = preferencesStore();
 
   const handleGenerate = async (values) => {
     console.log({ values });
@@ -86,9 +88,9 @@ function GenerationScreen() {
 
   const formik = useFormik({
     initialValues: {
-      dressCode: "",
+      dressCode: generalPreferences.selectedStyle || "",
       style: "",
-      Theme: [],
+      Theme: generalPreferences.customTheme || [],
       Season: "",
     },
     onSubmit: async (values) => handleGenerate(values),
@@ -221,7 +223,10 @@ function GenerationScreen() {
         </Collapsible>
       </View>
       <Text style={[styles.subHeader]}>
-        Note: Leaving options blank will use your general preferences.
+        Note: Default uses your general preferences.
+      </Text>
+      <Text style={[styles.subHeader]}>
+        Skin Tone automatically translates to color theme.
       </Text>
       {formik.isSubmitting ? (
         <ActivityIndicator size={60} color={colors.accent} />

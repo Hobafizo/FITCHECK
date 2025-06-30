@@ -7,7 +7,7 @@ function Pill({ title, isSelected, setIsSelected }) {
       <Pressable
         style={styles.pill}
         android_ripple={{ color: "rgba(0,0,0,0.1)" }}
-        onPress={() => setIsSelected((prev) => title)}
+        onPress={() => setIsSelected(title)}
       >
         <Text style={[styles.pillTitle, isSelected && styles.titleSelected]}>
           {title}
