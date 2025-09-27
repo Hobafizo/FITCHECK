@@ -37,55 +37,54 @@ function HomeScreen() {
   );
 
   const getRecentOutfits = useOutfitStore((state) => state.getRecentOutfits);
+  const fetchOutfits = useCallback(() => {
+    async function handleFetchOutfits() {
+      try {
+        const res = await fetch(
+          process.env.EXPO_PUBLIC_API_HOST + "/wardrobe/outfits",
+          {
+            method: "GET",
+          }
+        );
 
+        const data = await res.json();
+        if (data.Result == false) {
+          console.log("Error", data.Errors[0]);
+        } else {
+          const groupedOutfits = Object.values(
+            data.Outfits.reduce((acc, curr) => {
+              const { OutfitID, ItemID, Favorite } = curr;
+              if (!acc[OutfitID]) {
+                acc[OutfitID] = {
+                  OutfitID,
+                  ItemIDs: [],
+                  Favorite,
+                };
+              }
+              acc[OutfitID].ItemIDs.push(ItemID);
+              return acc;
+            }, {})
+          );
+          console.log("Hi");
+
+          setOutfits(groupedOutfits);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    handleFetchOutfits();
+    setFavoriteOutfits(() => getFavoriteOutfits());
+    setRecentOutfits(() => getRecentOutfits());
+  }, [wardrobeItems]);
   useEffect(() => {
     handleFetchWardrobe();
+    fetchOutfits();
     getLocation();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      async function handleFetchOutfits() {
-        try {
-          const res = await fetch(
-            process.env.EXPO_PUBLIC_API_HOST + "/wardrobe/outfits",
-            {
-              method: "GET",
-            }
-          );
-
-          const data = await res.json();
-          if (data.Result == false) {
-            console.log("Error", data.Errors[0]);
-          } else {
-            const groupedOutfits = Object.values(
-              data.Outfits.reduce((acc, curr) => {
-                const { OutfitID, ItemID, Favorite } = curr;
-                if (!acc[OutfitID]) {
-                  acc[OutfitID] = {
-                    OutfitID,
-                    ItemIDs: [],
-                    Favorite,
-                  };
-                }
-                acc[OutfitID].ItemIDs.push(ItemID);
-                return acc;
-              }, {})
-            );
-            console.log("Hi");
-
-            setOutfits(groupedOutfits);
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      }
-
-      handleFetchOutfits();
-      setFavoriteOutfits(() => getFavoriteOutfits());
-      setRecentOutfits(() => getRecentOutfits());
-    }, [wardrobeItems])
-  );
+  useFocusEffect(fetchOutfits);
 
   const navigation = useNavigation();
   return (
@@ -109,83 +108,96 @@ function HomeScreen() {
           <WeatherCard />
         </ScrollView>
 
-        {(recentOutfits.length == 0 && favoriteOutfits.length == 0) && (
-          <View style={{ alignItems: "center"}}>          
-            <Text style={{fontFamily: "Inter", fontSize: 20, marginTop: 130, padding: 50}}>Recent and Favorite outfits will appear here as you use the app!</Text>
+        {recentOutfits.length == 0 && favoriteOutfits.length == 0 && (
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{
+                fontFamily: "Inter",
+                fontSize: 20,
+                marginTop: 130,
+                padding: 50,
+              }}
+            >
+              Recent and Favorite outfits will appear here as you use the app!
+            </Text>
           </View>
         )}
 
         {/* scrollableSection */}
         {recentOutfits.length > 0 && (
           <View style={styles.section}>
-          {/* Section Heading */}
-          <View style={styles.sectionHeading}>
-            <Text style={styles.sectionTitle}>Recent Outfits</Text>
-            <Pressable
-              onPress={() =>
-                navigation.navigate("OutfitsTab", {
-                  screen: "Outfits",
-                  params: { isRecent: true, isFavorites: false },
-                })
-              }
+            {/* Section Heading */}
+            <View style={styles.sectionHeading}>
+              <Text style={styles.sectionTitle}>Recent Outfits</Text>
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("OutfitsTab", {
+                    screen: "Outfits",
+                    params: { isRecent: true, isFavorites: false },
+                  })
+                }
+              >
+                <Text style={styles.pressableText}>View More</Text>
+              </Pressable>
+            </View>
+
+            {/* Section Content */}
+            <ScrollView
+              contentContainerStyle={styles.sectionContent}
+              horizontal
+              showsHorizontalScrollIndicator={false}
             >
-              <Text style={styles.pressableText}>View More</Text>
-            </Pressable>
+              {recentOutfits.map(({ OutfitID }) => (
+                <View style={styles.cardWrapper} key={OutfitID}>
+                  <OutfitCard
+                    OutfitID={OutfitID}
+                    onPress={() =>
+                      navigation.push("OutfitDetails", { OutfitID })
+                    }
+                  />
+                </View>
+              ))}
+            </ScrollView>
           </View>
-
-          {/* Section Content */}
-          <ScrollView
-            contentContainerStyle={styles.sectionContent}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {recentOutfits.map(({ OutfitID }) => (
-              <View style={styles.cardWrapper} key={OutfitID}>
-                <OutfitCard
-                  OutfitID={OutfitID}
-                  onPress={() => navigation.push("OutfitDetails", { OutfitID })}
-                />
-              </View>
-            ))}
-          </ScrollView>
-        </View>
         )}
-
 
         {/* scrollableSection */}
         {favoriteOutfits.length > 0 && (
-        <View style={styles.section}>
-          {/* Section Heading */}
-          <View style={styles.sectionHeading}>
-            <Text style={styles.sectionTitle}>Favorite Outfits</Text>
-            <Pressable
-              onPress={() =>
-                navigation.navigate("OutfitsTab", {
-                  screen: "Outfits",
-                  params: { isRecent: false, isFavorites: true },
-                })
-              }
-            >
-              <Text style={styles.pressableText}>View More</Text>
-            </Pressable>
-          </View>
+          <View style={styles.section}>
+            {/* Section Heading */}
+            <View style={styles.sectionHeading}>
+              <Text style={styles.sectionTitle}>Favorite Outfits</Text>
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("OutfitsTab", {
+                    screen: "Outfits",
+                    params: { isRecent: false, isFavorites: true },
+                  })
+                }
+              >
+                <Text style={styles.pressableText}>View More</Text>
+              </Pressable>
+            </View>
 
-          {/* Section Content */}
-          <ScrollView
-            contentContainerStyle={styles.sectionContent}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {favoriteOutfits.map(({ OutfitID }) => (
-              <View style={styles.cardWrapper} key={OutfitID}>
-                <OutfitCard
-                  OutfitID={OutfitID}
-                  onPress={() => navigation.push("OutfitDetails", { OutfitID })}
-                />
-              </View>
-            ))}
-          </ScrollView>
-        </View>)}
+            {/* Section Content */}
+            <ScrollView
+              contentContainerStyle={styles.sectionContent}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              {favoriteOutfits.map(({ OutfitID }) => (
+                <View style={styles.cardWrapper} key={OutfitID}>
+                  <OutfitCard
+                    OutfitID={OutfitID}
+                    onPress={() =>
+                      navigation.push("OutfitDetails", { OutfitID })
+                    }
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* <Pressable onPress={() => navigation.navigate("Outfits")}>
           <Text style={styles.generateOutfitText}>Generate New</Text>

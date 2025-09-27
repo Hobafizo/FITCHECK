@@ -16,12 +16,14 @@ import colors from "../assets/colors/colors";
 import Pill from "../components/you screen/Pill";
 import { Ionicons } from "@expo/vector-icons";
 import { useFormik } from "formik";
+import { preferencesStore } from "../store/preferencesStore";
 
 function GenerationScreen() {
   const navigation = useNavigation();
   const [isAuto, setIsAuto] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const coords = useLocationStore((state) => state.coords);
+  const generalPreferences = preferencesStore();
 
   const handleGenerate = async (values) => {
     console.log({ values });
@@ -34,10 +36,10 @@ function GenerationScreen() {
       .filter((tag) => tag !== "");
 
     const FilterTags = Object.entries(values).reduce((acc, [Class, Tags]) => {
-      if (isAuto && Class === "weather") {
+      if (isAuto && Class === "Season") {
         return acc;
       }
-      if (Class === "theme") {
+      if (Class === "Theme") {
         acc.push(...Tags.map((Tag) => ({ Class, Tag })));
       } else if (Tags !== "") {
         acc.push({ Class, Tag: Tags });
@@ -86,10 +88,10 @@ function GenerationScreen() {
 
   const formik = useFormik({
     initialValues: {
-      dressCode: "",
+      dressCode: generalPreferences.selectedStyle || "",
       style: "",
-      theme: [],
-      weather: "",
+      Theme: generalPreferences.customTheme || [],
+      Season: "",
     },
     onSubmit: async (values) => handleGenerate(values),
   });
@@ -108,7 +110,7 @@ function GenerationScreen() {
           field,
           formik.values[field].filter((item) => item !== title)
         )
-      : formik.setFieldValue(field, [...formik.values.theme, title]);
+      : formik.setFieldValue(field, [...formik.values.Theme, title]);
   }
 
   return (
@@ -154,8 +156,8 @@ function GenerationScreen() {
             <Pill
               key={option}
               title={option}
-              isSelected={formik.values.theme.includes(option)}
-              setIsSelected={() => addTag("theme", option)}
+              isSelected={formik.values.Theme?.includes(option)}
+              setIsSelected={() => addTag("Theme", option)}
             />
           ))}
 
@@ -212,8 +214,8 @@ function GenerationScreen() {
                 <Pill
                   key={option}
                   title={option}
-                  isSelected={option === formik.values.weather}
-                  setIsSelected={() => selectTag("weather", option)}
+                  isSelected={option === formik.values.Season}
+                  setIsSelected={() => selectTag("Season", option)}
                 />
               ))}
             </View>
@@ -221,7 +223,10 @@ function GenerationScreen() {
         </Collapsible>
       </View>
       <Text style={[styles.subHeader]}>
-        Note: Leaving options blank will use your general preferences.
+        Note: Default uses your general preferences.
+      </Text>
+      <Text style={[styles.subHeader]}>
+        Skin Tone automatically translates to color theme.
       </Text>
       {formik.isSubmitting ? (
         <ActivityIndicator size={60} color={colors.accent} />

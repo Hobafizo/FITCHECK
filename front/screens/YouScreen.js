@@ -8,7 +8,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 
 import colors from "../assets/colors/colors";
@@ -17,16 +17,35 @@ import ColorItem from "../components/you screen/ColorItem";
 import Pill from "../components/you screen/Pill";
 import { useNavigation } from "@react-navigation/native";
 import { useUserStore } from "../store/userStore";
+import { preferencesStore } from "../store/preferencesStore";
 
 function YouScreen() {
   const navigation = useNavigation();
+  const {
+    selectedSkin,
+    selectedStyle,
+    selectedColorTone,
+    setSelectedSkin,
+    setSelectedColorTone,
+    setSelectedStyle,
+    updateCustomTheme,
+  } = preferencesStore();
 
-  const [selectedSkin, setSelectedSkin] = useState("");
-  const [selectedStyle, setSelectedStyle] = useState("Neutral");
-  const [selectedColorTone, setSelectedColorTone] = useState("Neutral");
+  useEffect(() => {
+    console.log(selectedStyle);
+    console.log(selectedColorTone);
+    console.log(selectedSkin);
+    updateCustomTheme();
+  }, [selectedColorTone, selectedSkin, selectedStyle]);
+
+  // const [selectedSkin, setSelectedSkin] = useState("");
+  // const [selectedStyle, setSelectedStyle] = useState("Neutral");
+  // const [selectedColorTone, setSelectedColorTone] = useState("Neutral");
 
   const firstName = useUserStore((state) => state.FirstName);
   const removeUser = useUserStore((state) => state.removeUser);
+
+  useEffect(() => {}, [selectedSkin, selectedColorTone, selectedStyle]);
 
   async function handleLogout(values) {
     console.log(process.env.EXPO_PUBLIC_API_HOST);
@@ -157,8 +176,8 @@ function YouScreen() {
               setIsSelected={setSelectedColorTone}
             />
             <Pill
-              title={"Cool"}
-              isSelected={selectedColorTone == "Cool"}
+              title={"Cold"}
+              isSelected={selectedColorTone == "Cold"}
               setIsSelected={setSelectedColorTone}
             />
           </View>
